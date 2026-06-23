@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/home.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -39,9 +40,10 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(
+    Navigator.push(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Đăng nhập thành công')));
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+    );
   }
 
   @override
@@ -117,6 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     color: _primaryText,
                                     size: 21,
                                   ),
+
                                 ),
                                 validator: (value) {
                                   if ((value ?? '').isEmpty) {
