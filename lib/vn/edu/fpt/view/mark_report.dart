@@ -444,113 +444,117 @@ class _GradeCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: SizedBox(
-          height: 102,
-          child: Row(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 102),
+          child: Stack(
             children: [
-              Container(
-                width: 4,
-                color: statusColor,
+              Positioned(
+                top: 0,
+                bottom: 0,
+                left: 0,
+                child: Container(
+                  width: 4,
+                  color: statusColor,
+                ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 13, 14, 11),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: RichText(
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              text: TextSpan(
-                                style: const TextStyle(
-                                  color: _MarkReportScreenState._mutedText,
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 13, 14, 11),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: RichText(
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            text: TextSpan(
+                              style: const TextStyle(
+                                color: _MarkReportScreenState._mutedText,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: grade.subjectCode,
+                                  style: const TextStyle(
+                                    color: _MarkReportScreenState._titleText,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                                 ),
-                                children: [
-                                  TextSpan(
-                                    text: grade.subjectCode,
-                                    style: const TextStyle(
-                                      color: _MarkReportScreenState._titleText,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: ' - ${grade.subjectName}',
-                                  ),
-                                ],
-                              ),
+                                TextSpan(
+                                  text: ' - ${grade.subjectName}',
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Container(
-                            constraints: const BoxConstraints(minWidth: 82),
-                            height: 21,
-                            alignment: Alignment.center,
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            decoration: BoxDecoration(
-                              color: statusBackground,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              statusText,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: statusColor,
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0,
-                              ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          constraints: const BoxConstraints(minWidth: 82),
+                          height: 21,
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          decoration: BoxDecoration(
+                            color: statusBackground,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            statusText,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: statusColor,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0,
                             ),
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 9),
+                    const Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: Color(0xFFEDEFF4),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Class name: ${_displayClassName()}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: _MarkReportScreenState._mutedText,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
                       ),
-                      const SizedBox(height: 9),
-                      const Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: Color(0xFFEDEFF4),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Class name: ${_displayClassName()}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    RichText(
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      text: TextSpan(
                         style: const TextStyle(
                           color: _MarkReportScreenState._mutedText,
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      RichText(
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        text: TextSpan(
-                          style: const TextStyle(
-                            color: _MarkReportScreenState._mutedText,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          children: [
-                            const TextSpan(text: 'Average: '),
-                            TextSpan(
-                              text: grade.average.toStringAsFixed(1),
-                              style: TextStyle(
-                                color: statusColor,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w900,
-                              ),
+                        children: [
+                          const TextSpan(text: 'Average: '),
+                          TextSpan(
+                            text: grade.average.toStringAsFixed(1),
+                            style: TextStyle(
+                              color: statusColor,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],

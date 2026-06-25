@@ -37,7 +37,10 @@ class LoginResponse {
 }
 
 class AuthService {
-  static const String baseUrl = 'http://10.0.2.2:8080/api';
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://192.168.1.11:8080/api',
+  );
 
   Future<LoginResponse> login({
     required String studentCode,
