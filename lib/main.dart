@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/service/notification_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,6 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: notificationNavigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'My FSchool',
       theme: ThemeData(

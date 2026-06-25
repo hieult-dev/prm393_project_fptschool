@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/home.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/service/auth_service.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/service/notification_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController? _passwordController;
 
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   static const _orange = Color(0xFFFF7628);
   static const _primaryText = Color(0xFF1E2233);
@@ -35,15 +38,52 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _login() {
+  void _login() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
-    );
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final authService = AuthService();
+      final loginResponse = await authService.login(
+        studentCode: _accountTextController.text.trim(),
+        password: _passwordTextController.text,
+      );
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(currentUser: loginResponse),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        String message;
+        if (e is Exception) {
+          message = e.toString();
+        } else {
+          message = '$e';
+        }
+        // remove common prefixes like "Exception:" and any wrapper text
+        message = message
+            .replaceAll(RegExp(r'exception:\s*', caseSensitive: false), '')
+            .replaceAll('Error during login:', '')
+            .trim();
+        NotificationService.showError(message);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -119,7 +159,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                     color: _primaryText,
                                     size: 21,
                                   ),
-
                                 ),
                                 validator: (value) {
                                   if ((value ?? '').isEmpty) {
@@ -151,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               SizedBox(
                                 height: 52,
                                 child: FilledButton(
-                                  onPressed: _login,
+                                  onPressed: _isLoading ? null : _login,
                                   style: FilledButton.styleFrom(
                                     backgroundColor: _buttonFill,
                                     foregroundColor: Colors.white,
@@ -163,7 +202,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
-                                  child: const Text('Đăng nhập'),
+                                  child: _isLoading
+                                      ? const SizedBox(
+                                          height: 24,
+                                          width: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  Colors.white,
+                                                ),
+                                          ),
+                                        )
+                                      : const Text('Đăng nhập'),
                                 ),
                               ),
                               const Spacer(),
