@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
+import 'package:myfschoolse1911/vn/edu/fpt/service/auth_session.dart';
 
 class LoginResponse {
   final int id;
@@ -23,41 +25,83 @@ class LoginResponse {
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
+    final id = _parseId(json['id']);
+    final userName = _stringValue(json['userName']);
+    final firstName = _stringValue(json['firstName']);
+    final lastName = _stringValue(json['lastName']);
+    final roles = _stringList(json['roles']);
+
     return LoginResponse(
-      id: json['id'] as int,
-      studentCode: json['studentCode'] as String,
-      fullName: json['fullName'] as String,
-      email: json['email'] as String,
-      phone: json['phone'] as String?,
-      className: json['className'] as String?,
-      role: json['role'] as String,
-      status: json['status'] as String,
+      id: id,
+      // The backend renamed studentCode/fullName to
+      // userName/firstName/lastName. Keep the app model compatible with both
+      // response formats so an absent legacy field is not cast from null.
+      studentCode: _stringValue(json['studentCode']).isNotEmpty
+          ? _stringValue(json['studentCode'])
+          : userName,
+      fullName: _stringValue(json['fullName']).isNotEmpty
+          ? _stringValue(json['fullName'])
+          : [firstName, lastName].where((part) => part.isNotEmpty).join(' '),
+      email: _stringValue(json['email']),
+      phone: _nullableString(json['phone']),
+      className: _nullableString(json['className']),
+      role: _stringValue(json['role']).isNotEmpty
+          ? _stringValue(json['role'])
+          : (roles.isEmpty ? '' : roles.first),
+      status: _stringValue(json['status']),
     );
+  }
+
+  static int _parseId(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+
+    final parsed = int.tryParse(value?.toString() ?? '');
+    if (parsed != null) return parsed;
+
+    throw const FormatException(
+      'Dữ liệu đăng nhập không hợp lệ: thiếu mã người dùng',
+    );
+  }
+
+  static String _stringValue(dynamic value) => value?.toString().trim() ?? '';
+
+  static String? _nullableString(dynamic value) {
+    final result = _stringValue(value);
+    return result.isEmpty ? null : result;
+  }
+
+  static List<String> _stringList(dynamic value) {
+    if (value is! List) return const [];
+    return value.map(_stringValue).where((item) => item.isNotEmpty).toList();
   }
 }
 
 class AuthService {
-  static const String baseUrl = String.fromEnvironment(
+  static const String _configuredBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://192.168.137.1:8080/api',
   );
 
+  static String get baseUrl {
+    if (_configuredBaseUrl.isNotEmpty) {
+      return _configuredBaseUrl;
+    }
+
+    return kIsWeb
+        ? 'http://localhost:8080/api'
+        : 'http://192.168.1.11:8080/api';
+  }
+
   Future<LoginResponse> login({
-    required String studentCode,
+    required String userName,
     required String password,
   }) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/users/login'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'studentCode': studentCode,
-        'password': password,
-      }),
+      Uri.parse('$baseUrl/auth/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'userName': userName, 'password': password}),
     );
 
-    // Helper to try extract backend "message" field from JSON body
     String? tryParseMessage(String body) {
       try {
         final jsonResponse = jsonDecode(body);
@@ -71,7 +115,21 @@ class AuthService {
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
       if (jsonResponse['success'] == true) {
-        return LoginResponse.fromJson(jsonResponse['data']);
+        final data = jsonResponse['data'];
+        if (data is! Map<String, dynamic>) {
+          throw Exception('Dữ liệu đăng nhập không hợp lệ');
+        }
+
+        final accessToken = data['accessToken']?.toString();
+        final user = data['user'];
+        if (accessToken == null ||
+            accessToken.isEmpty ||
+            user is! Map<String, dynamic>) {
+          throw Exception('Phản hồi đăng nhập không chứa JWT hợp lệ');
+        }
+
+        await AuthSession.saveAccessToken(accessToken);
+        return LoginResponse.fromJson(user);
       } else {
         final msg = jsonResponse['message']?.toString() ?? 'Đăng nhập thất bại';
         throw Exception(msg);
@@ -91,4 +149,6 @@ class AuthService {
       }
     }
   }
+
+  Future<void> logout() => AuthSession.clear();
 }

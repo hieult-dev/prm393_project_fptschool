@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/service/auth_session.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/mark_report_service.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/mark_detail.dart';
 
 class MarkReportScreen extends StatefulWidget {
-  const MarkReportScreen({
-    super.key,
-    required this.userId,
-  });
-
-  final int userId;
+  const MarkReportScreen({super.key});
 
   @override
   State<MarkReportScreen> createState() => _MarkReportScreenState();
@@ -27,13 +24,12 @@ class _MarkReportScreenState extends State<MarkReportScreen> {
 
   late final Future<List<MarkReportSemester>> _markReportFuture;
   int? _selectedSemesterId;
+  bool _redirectingToLogin = false;
 
   @override
   void initState() {
     super.initState();
-    _markReportFuture = MarkReportService().fetchMarkReport(
-      userId: widget.userId,
-    );
+    _markReportFuture = MarkReportService().fetchMarkReport();
   }
 
   @override
@@ -72,9 +68,14 @@ class _MarkReportScreenState extends State<MarkReportScreen> {
                   }
 
                   if (snapshot.hasError) {
+                    if (snapshot.error is SessionExpiredException) {
+                      _redirectToLogin();
+                    }
                     return _buildStateMessage(
                       icon: Icons.error_outline,
-                      title: 'Cannot load mark report',
+                      title: snapshot.error is SessionExpiredException
+                          ? 'Session expired'
+                          : 'Cannot load mark report',
                       message: _cleanError(snapshot.error),
                     );
                   }
@@ -111,6 +112,18 @@ class _MarkReportScreenState extends State<MarkReportScreen> {
         bottomNavigationBar: _buildBottomNavigation(),
       ),
     );
+  }
+
+  void _redirectToLogin() {
+    if (_redirectingToLogin) return;
+    _redirectingToLogin = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+        (_) => false,
+      );
+    });
   }
 
   Widget _buildHeader(BuildContext context) {

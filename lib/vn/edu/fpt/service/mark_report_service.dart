@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:myfschoolse1911/vn/edu/fpt/service/auth_service.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/service/auth_session.dart';
 
 class MarkReportSemester {
   MarkReportSemester({
@@ -174,12 +175,14 @@ class MarkDetailItem {
 }
 
 class MarkReportService {
-  Future<List<MarkReportSemester>> fetchMarkReport({
-    required int userId,
-  }) async {
+  Future<List<MarkReportSemester>> fetchMarkReport() async {
+    final headers = await AuthSession.authorizedHeaders();
     final response = await http.get(
-      Uri.parse('${AuthService.baseUrl}/student-grades/mark-report?userId=$userId'),
+      Uri.parse('${AuthService.baseUrl}/student-grades/mark-report'),
+      headers: headers,
     );
+
+    await _throwIfUnauthorized(response.statusCode);
 
     final jsonResponse = _decodeResponse(response.body);
     if (response.statusCode == 200 && jsonResponse['success'] == true) {
@@ -204,9 +207,13 @@ class MarkReportService {
   Future<MarkDetail> fetchMarkDetail({
     required int gradeId,
   }) async {
+    final headers = await AuthSession.authorizedHeaders();
     final response = await http.get(
       Uri.parse('${AuthService.baseUrl}/student-grades/$gradeId/mark-detail'),
+      headers: headers,
     );
+
+    await _throwIfUnauthorized(response.statusCode);
 
     final jsonResponse = _decodeResponse(response.body);
     if (response.statusCode == 200 && jsonResponse['success'] == true) {
@@ -232,5 +239,12 @@ class MarkReportService {
       }
     } catch (_) {}
     return <String, dynamic>{};
+  }
+
+  Future<void> _throwIfUnauthorized(int statusCode) async {
+    if (statusCode == 401 || statusCode == 403) {
+      await AuthSession.clear();
+      throw const SessionExpiredException();
+    }
   }
 }

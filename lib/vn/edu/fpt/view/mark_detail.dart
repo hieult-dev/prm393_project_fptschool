@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/service/auth_session.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/mark_report_service.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
 
 class MarkDetailScreen extends StatefulWidget {
   const MarkDetailScreen({super.key, required this.gradeId});
@@ -24,6 +26,7 @@ class _MarkDetailScreenState extends State<MarkDetailScreen> {
   static const _line = Color(0xFFE7EAF0);
 
   late final Future<MarkDetail> _detailFuture;
+  bool _redirectingToLogin = false;
 
   @override
   void initState() {
@@ -64,9 +67,14 @@ class _MarkDetailScreenState extends State<MarkDetailScreen> {
                   }
 
                   if (snapshot.hasError) {
+                    if (snapshot.error is SessionExpiredException) {
+                      _redirectToLogin();
+                    }
                     return _StateMessage(
                       icon: Icons.error_outline,
-                      title: 'Cannot load mark details',
+                      title: snapshot.error is SessionExpiredException
+                          ? 'Session expired'
+                          : 'Cannot load mark details',
                       message: _cleanError(snapshot.error),
                     );
                   }
@@ -102,6 +110,18 @@ class _MarkDetailScreenState extends State<MarkDetailScreen> {
         bottomNavigationBar: _buildBottomNavigation(),
       ),
     );
+  }
+
+  void _redirectToLogin() {
+    if (_redirectingToLogin) return;
+    _redirectingToLogin = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+        (_) => false,
+      );
+    });
   }
 
   Widget _buildHeader(BuildContext context) {

@@ -227,7 +227,7 @@ class HomeScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                          MarkReportScreen(userId: currentUser.id),
+                          const MarkReportScreen(),
                     ),
                   );
                 },

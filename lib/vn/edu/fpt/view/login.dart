@@ -50,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final authService = AuthService();
       final loginResponse = await authService.login(
-        studentCode: _accountTextController.text.trim(),
+        userName: _accountTextController.text.trim(),
         password: _passwordTextController.text,
       );
 
