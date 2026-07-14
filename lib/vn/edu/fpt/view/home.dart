@@ -1,17 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/auth_service.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/mark_report.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/parent_home.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/profile_screen.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/student_applications.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/teacher_home.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/weekly_timetable.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/widgets/main_bottom_navigation.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.currentUser});
 
   final LoginResponse currentUser;
 
+  @override
+  Widget build(BuildContext context) {
+    if (currentUser.hasRole('TEACHER')) {
+      return TeacherHomeScreen(currentUser: currentUser);
+    }
+    if (currentUser.hasRole('PARENT')) {
+      return ParentHomeScreen(currentUser: currentUser);
+    }
+    if (currentUser.hasRole('STUDENT')) {
+      return _StudentHomeScreen(currentUser: currentUser);
+    }
+    return _UnsupportedRoleScreen(currentUser: currentUser);
+  }
+}
+
+class _StudentHomeScreen extends StatelessWidget {
+  const _StudentHomeScreen({required this.currentUser});
+
+  final LoginResponse currentUser;
+
   static const _background = Color(0xFFF5F6FB);
   static const _topColor = Color(0xFF183A66);
-  static const _bottomColor = Color(0xFF183A66);
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +52,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             Container(
               color: _topColor,
-              child: SafeArea(bottom: false, child: _buildHeader()),
+              child: SafeArea(bottom: false, child: _buildHeader(context)),
             ),
             Expanded(
               child: ListView(
@@ -35,7 +60,7 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   _buildSectionTitle('NOTIFICATION AND APPLICATION STATUS'),
                   const SizedBox(height: 12),
-                  _buildStatusSection(),
+                  _buildStatusSection(context),
 
                   const SizedBox(height: 22),
                   _buildSectionTitle('INFORMATION ACCESS'),
@@ -56,12 +81,12 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
-        bottomNavigationBar: _buildBottomNavigation(),
+        bottomNavigationBar: _buildBottomNavigation(context),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       height: 86,
       color: _topColor,
@@ -78,23 +103,31 @@ class HomeScreen extends StatelessWidget {
             child: const Icon(Icons.person, color: Colors.white, size: 26),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Lê Trung Hiếu',
-                  style: TextStyle(
+                  currentUser.fullName.isEmpty
+                      ? currentUser.userName
+                      : currentUser.fullName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  'FPT University',
-                  style: TextStyle(
+                  currentUser.className == null
+                      ? currentUser.userName
+                      : '${currentUser.userName} · ${currentUser.className}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     color: Color(0xFFB8C8E6),
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -110,14 +143,23 @@ class HomeScreen extends StatelessWidget {
               color: Colors.white24,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.notifications_none,
-              color: Colors.white,
-              size: 24,
+            child: IconButton(
+              onPressed: () => _logout(context),
+              tooltip: 'Đăng xuất',
+              icon: const Icon(Icons.logout, color: Colors.white, size: 22),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    await AuthService().logout();
+    if (!context.mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+      (_) => false,
     );
   }
 
@@ -136,10 +178,10 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusSection() {
+  Widget _buildStatusSection(BuildContext context) {
     return Row(
-      children: const [
-        Expanded(
+      children: [
+        const Expanded(
           child: _HomeCard(
             title: 'Notification',
             icon: Icons.notifications_active,
@@ -147,13 +189,21 @@ class HomeScreen extends StatelessWidget {
             backgroundColor: Color(0xFFFFF3E0),
           ),
         ),
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         Expanded(
           child: _HomeCard(
             title: 'Application status',
             icon: Icons.badge,
-            iconColor: Color(0xFF1976C9),
-            backgroundColor: Color(0xFFEAF2FF),
+            iconColor: const Color(0xFF1976C9),
+            backgroundColor: const Color(0xFFEAF2FF),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const StudentApplicationsScreen(),
+                ),
+              );
+            },
           ),
         ),
       ],
@@ -293,37 +343,53 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNavigation() {
-    return Container(
-      height: 66,
-      decoration: const BoxDecoration(
-        color: _bottomColor,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(22),
-          topRight: Radius.circular(22),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Container(
-              width: 50,
-              height: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFF3F4652),
-                borderRadius: BorderRadius.circular(14),
+  Widget _buildBottomNavigation(BuildContext context) {
+    return MainBottomNavigation(
+      onProfile: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const ProfileScreen())),
+    );
+  }
+}
+
+class _UnsupportedRoleScreen extends StatelessWidget {
+  const _UnsupportedRoleScreen({required this.currentUser});
+
+  final LoginResponse currentUser;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('My FSchool')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.manage_accounts_outlined, size: 64),
+              const SizedBox(height: 16),
+              Text(
+                'Tài khoản ${currentUser.userName} chưa có vai trò được hỗ trợ trên mobile.',
+                textAlign: TextAlign.center,
               ),
-              child: const Icon(
-                Icons.home_filled,
-                color: Color(0xFFFF9800),
-                size: 28,
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: () async {
+                  await AuthService().logout();
+                  if (!context.mounted) return;
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const LoginScreen(),
+                    ),
+                    (_) => false,
+                  );
+                },
+                icon: const Icon(Icons.logout),
+                label: const Text('Đăng xuất'),
               ),
-            ),
-            const Icon(Icons.chat_bubble, color: Color(0xFF9EACBE), size: 25),
-            const Icon(Icons.person, color: Color(0xFF9EACBE), size: 27),
-          ],
+            ],
+          ),
         ),
       ),
     );

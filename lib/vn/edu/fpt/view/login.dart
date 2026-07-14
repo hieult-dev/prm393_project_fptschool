@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/home.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/auth_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/notification_service.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/forgot_password.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -171,7 +172,15 @@ class _LoginScreenState extends State<LoginScreen> {
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: TextButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute<void>(
+                                        builder: (_) =>
+                                            const ForgotPasswordScreen(),
+                                      ),
+                                    );
+                                  },
                                   style: TextButton.styleFrom(
                                     foregroundColor: _orange,
                                     padding: EdgeInsets.zero,

@@ -1,13 +1,13 @@
-import 'dart:convert';
+import 'package:myfschoolse1911/vn/edu/fpt/service/api_client.dart';
 
-import 'package:http/http.dart' as http;
-import 'package:myfschoolse1911/vn/edu/fpt/service/auth_service.dart';
-import 'package:myfschoolse1911/vn/edu/fpt/service/auth_session.dart';
+enum ScheduleScope { student, parent, teacher }
 
 class ScheduleItem {
   const ScheduleItem({
     required this.id,
+    this.semesterId = 0,
     required this.semesterName,
+    this.subjectId = 0,
     required this.subjectCode,
     required this.subjectName,
     required this.studyDate,
@@ -16,10 +16,14 @@ class ScheduleItem {
     this.room,
     this.lecturerName,
     this.note,
+    this.studentCount,
+    this.classNames = const [],
   });
 
   final int id;
+  final int semesterId;
   final String semesterName;
+  final int subjectId;
   final String subjectCode;
   final String subjectName;
   final DateTime studyDate;
@@ -28,21 +32,34 @@ class ScheduleItem {
   final String? room;
   final String? lecturerName;
   final String? note;
+  final int? studentCount;
+  final List<String> classNames;
 
   factory ScheduleItem.fromJson(Map<String, dynamic> json) {
     return ScheduleItem(
       id: _asInt(json['id']),
+      semesterId: _asInt(json['semesterId']),
       semesterName: json['semesterName'] as String? ?? '',
+      subjectId: _asInt(json['subjectId']),
       subjectCode: json['subjectCode'] as String? ?? '',
       subjectName: json['subjectName'] as String? ?? '',
       studyDate:
           DateTime.tryParse(json['studyDate']?.toString() ?? '') ??
-          DateTime.now(),
+          (throw const FormatException('Ngày của lịch học không hợp lệ')),
       startTime: _shortTime(json['startTime']),
       endTime: _shortTime(json['endTime']),
       room: _nullableText(json['room']),
       lecturerName: _nullableText(json['lecturerName']),
       note: _nullableText(json['note']),
+      studentCount: json['studentCount'] == null
+          ? null
+          : _asInt(json['studentCount']),
+      classNames: json['classNames'] is List
+          ? (json['classNames'] as List)
+                .map((value) => value?.toString().trim() ?? '')
+                .where((value) => value.isNotEmpty)
+                .toList(growable: false)
+          : const [],
     );
   }
 
@@ -64,47 +81,67 @@ class ScheduleItem {
 }
 
 class ScheduleService {
-  Future<List<ScheduleItem>> fetchScheduleForDate(DateTime studyDate) async {
-    final headers = await AuthSession.authorizedHeaders();
-    final response = await http.get(
-      Uri.parse(
-        '${AuthService.baseUrl}/schedules/day',
-      ).replace(queryParameters: {'studyDate': _formatDate(studyDate)}),
-      headers: headers,
+  ScheduleService({ApiClient client = const ApiClient()}) : _client = client;
+
+  final ApiClient _client;
+
+  Future<List<ScheduleItem>> fetchScheduleForDate(
+    DateTime studyDate, {
+    ScheduleScope scope = ScheduleScope.student,
+    int? studentId,
+  }) async {
+    final data = await _client.get(
+      _path(scope: scope, studentId: studentId, period: 'day'),
+      queryParameters: {'studyDate': _formatDate(studyDate)},
     );
-
-    if (response.statusCode == 401) {
-      await AuthSession.clear();
-      throw const SessionExpiredException();
-    }
-
-    final decoded = _decodeResponse(response.body);
-    if (response.statusCode == 200 && decoded['success'] == true) {
-      final data = decoded['data'];
-      if (data is List) {
-        return data
-            .whereType<Map<String, dynamic>>()
-            .map(ScheduleItem.fromJson)
-            .toList();
-      }
-      return const <ScheduleItem>[];
-    }
-
-    final message = decoded['message']?.toString();
-    throw Exception(
-      message == null || message.isEmpty ? 'Không thể tải lịch học' : message,
-    );
+    return _parseItems(data);
   }
 
-  Map<String, dynamic> _decodeResponse(String body) {
-    try {
-      final decoded = jsonDecode(body);
-      if (decoded is Map<String, dynamic>) return decoded;
-    } catch (_) {}
-    return <String, dynamic>{};
+  Future<List<ScheduleItem>> fetchWeeklySchedule(
+    DateTime weekStart, {
+    ScheduleScope scope = ScheduleScope.student,
+    int? studentId,
+  }) async {
+    final data = await _client.get(
+      _path(scope: scope, studentId: studentId, period: 'weekly'),
+      queryParameters: {'weekStart': _formatDate(weekStart)},
+    );
+    return _parseItems(data);
   }
 
-  String _formatDate(DateTime value) {
+  String _path({
+    required ScheduleScope scope,
+    required String period,
+    int? studentId,
+  }) {
+    return switch (scope) {
+      ScheduleScope.student => '/schedules/$period',
+      ScheduleScope.teacher => '/teacher/schedules/$period',
+      ScheduleScope.parent =>
+        studentId == null
+            ? throw ArgumentError('studentId is required for a parent schedule')
+            : '/parent/students/$studentId/schedules/$period',
+    };
+  }
+
+  List<ScheduleItem> _parseItems(dynamic data) {
+    if (data is! List) {
+      throw const FormatException('Dữ liệu lịch học không hợp lệ');
+    }
+    return data
+        .map((item) => ScheduleItem.fromJson(_jsonMap(item)))
+        .toList(growable: false);
+  }
+
+  Map<String, dynamic> _jsonMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) {
+      return value.map((key, item) => MapEntry(key.toString(), item));
+    }
+    throw const FormatException('Phần tử lịch học không hợp lệ');
+  }
+
+  static String _formatDate(DateTime value) {
     final date = DateTime(value.year, value.month, value.day);
     return '${date.year.toString().padLeft(4, '0')}-'
         '${date.month.toString().padLeft(2, '0')}-'

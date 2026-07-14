@@ -4,9 +4,14 @@ import 'package:myfschoolse1911/vn/edu/fpt/service/auth_session.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/mark_report_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/mark_detail.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/profile_screen.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/widgets/main_bottom_navigation.dart';
 
 class MarkReportScreen extends StatefulWidget {
-  const MarkReportScreen({super.key});
+  const MarkReportScreen({super.key, this.studentId, this.studentName});
+
+  final int? studentId;
+  final String? studentName;
 
   @override
   State<MarkReportScreen> createState() => _MarkReportScreenState();
@@ -29,7 +34,9 @@ class _MarkReportScreenState extends State<MarkReportScreen> {
   @override
   void initState() {
     super.initState();
-    _markReportFuture = MarkReportService().fetchMarkReport();
+    _markReportFuture = MarkReportService().fetchMarkReport(
+      studentId: widget.studentId,
+    );
   }
 
   @override
@@ -158,10 +165,14 @@ class _MarkReportScreenState extends State<MarkReportScreen> {
               ),
             ),
           ),
-          const Center(
+          Center(
             child: Text(
-              'Mark Report',
-              style: TextStyle(
+              widget.studentName == null
+                  ? 'Mark Report'
+                  : 'Điểm · ${widget.studentName}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
@@ -217,7 +228,10 @@ class _MarkReportScreenState extends State<MarkReportScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => MarkDetailScreen(gradeId: grade.id),
+                builder: (context) => MarkDetailScreen(
+                  gradeId: grade.id,
+                  studentId: widget.studentId,
+                ),
               ),
             );
           },
@@ -272,45 +286,10 @@ class _MarkReportScreenState extends State<MarkReportScreen> {
   }
 
   Widget _buildBottomNavigation() {
-    return Container(
-      height: 66,
-      decoration: const BoxDecoration(
-        color: _bottomColor,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(22),
-          topRight: Radius.circular(22),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Container(
-              width: 50,
-              height: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFF3F4652),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(
-                Icons.home_filled,
-                color: _orange,
-                size: 28,
-              ),
-            ),
-            const Icon(
-              Icons.chat_bubble,
-              color: Color(0xFF9EACBE),
-              size: 25,
-            ),
-            const Icon(
-              Icons.person,
-              color: Color(0xFF9EACBE),
-              size: 27,
-            ),
-          ],
-        ),
+    return MainBottomNavigation(
+      onHome: () => Navigator.of(context).popUntil((route) => route.isFirst),
+      onProfile: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
       ),
     );
   }

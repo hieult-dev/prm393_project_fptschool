@@ -1,8 +1,4 @@
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
-import 'package:myfschoolse1911/vn/edu/fpt/service/auth_service.dart';
-import 'package:myfschoolse1911/vn/edu/fpt/service/auth_session.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/service/api_client.dart';
 
 class MarkReportSemester {
   MarkReportSemester({
@@ -175,76 +171,31 @@ class MarkDetailItem {
 }
 
 class MarkReportService {
-  Future<List<MarkReportSemester>> fetchMarkReport() async {
-    final headers = await AuthSession.authorizedHeaders();
-    final response = await http.get(
-      Uri.parse('${AuthService.baseUrl}/student-grades/mark-report'),
-      headers: headers,
-    );
+  MarkReportService({ApiClient client = const ApiClient()}) : _client = client;
 
-    await _throwIfUnauthorized(response.statusCode);
+  final ApiClient _client;
 
-    final jsonResponse = _decodeResponse(response.body);
-    if (response.statusCode == 200 && jsonResponse['success'] == true) {
-      final data = jsonResponse['data'];
-      if (data is List) {
-        return data
-            .whereType<Map<String, dynamic>>()
-            .map(MarkReportSemester.fromJson)
-            .toList();
-      }
-      return <MarkReportSemester>[];
-    }
-
-    final message = jsonResponse['message']?.toString();
-    throw Exception(
-      message == null || message.isEmpty
-          ? 'Cannot load mark report'
-          : message,
-    );
+  Future<List<MarkReportSemester>> fetchMarkReport({int? studentId}) async {
+    final path = studentId == null
+        ? '/student-grades/mark-report'
+        : '/parent/students/$studentId/mark-report';
+    final data = await _client.get(path);
+    if (data is! List) return <MarkReportSemester>[];
+    return data
+        .whereType<Map<String, dynamic>>()
+        .map(MarkReportSemester.fromJson)
+        .toList();
   }
 
   Future<MarkDetail> fetchMarkDetail({
     required int gradeId,
+    int? studentId,
   }) async {
-    final headers = await AuthSession.authorizedHeaders();
-    final response = await http.get(
-      Uri.parse('${AuthService.baseUrl}/student-grades/$gradeId/mark-detail'),
-      headers: headers,
-    );
-
-    await _throwIfUnauthorized(response.statusCode);
-
-    final jsonResponse = _decodeResponse(response.body);
-    if (response.statusCode == 200 && jsonResponse['success'] == true) {
-      final data = jsonResponse['data'];
-      if (data is Map<String, dynamic>) {
-        return MarkDetail.fromJson(data);
-      }
-    }
-
-    final message = jsonResponse['message']?.toString();
-    throw Exception(
-      message == null || message.isEmpty
-          ? 'Cannot load mark detail'
-          : message,
-    );
-  }
-
-  Map<String, dynamic> _decodeResponse(String body) {
-    try {
-      final decoded = jsonDecode(body);
-      if (decoded is Map<String, dynamic>) {
-        return decoded;
-      }
-    } catch (_) {}
-    return <String, dynamic>{};
-  }
-
-  Future<void> _throwIfUnauthorized(int statusCode) async {
-    if (statusCode == 401 || statusCode == 403) {
-      await AuthSession.clear();
-      throw const SessionExpiredException();
-    }
+    final path = studentId == null
+        ? '/student-grades/$gradeId/mark-detail'
+        : '/parent/students/$studentId/grades/$gradeId/mark-detail';
+    final data = await _client.get(path);
+    if (data is Map<String, dynamic>) return MarkDetail.fromJson(data);
+    throw const ApiException('Dữ liệu chi tiết điểm không hợp lệ');
   }
 }

@@ -24,6 +24,9 @@ void main() {
       expect(response.email, '0858111305@myfschool.local');
       expect(response.className, isNull);
       expect(response.role, 'STUDENT');
+      expect(response.roles, ['STUDENT']);
+      expect(response.permissions, isEmpty);
+      expect(response.primaryRole, 'STUDENT');
       expect(response.status, 'ACTIVE');
     });
 
@@ -47,7 +50,43 @@ void main() {
       expect(response.phone, isNull);
       expect(response.className, isNull);
       expect(response.role, 'STUDENT');
+      expect(response.roles, ['STUDENT']);
       expect(response.status, '');
+    });
+
+    test('routes a migrated lecturer by the TEACHER role list', () {
+      final response = LoginResponse.fromJson({
+        'id': 3,
+        'userName': 'lecturer01',
+        'firstName': 'Giảng viên',
+        'lastName': 'Một',
+        'email': 'lecturer01@example.com',
+        'role': 'LECTURER',
+        'roles': ['LECTURER', 'TEACHER'],
+        'permissions': ['GRADE_READ', 'GRADE_WRITE'],
+        'status': 'ACTIVE',
+      });
+
+      expect(response.role, 'LECTURER');
+      expect(response.hasRole('teacher'), isTrue);
+      expect(response.primaryRole, 'TEACHER');
+      expect(response.permissions, ['GRADE_READ', 'GRADE_WRITE']);
+    });
+
+    test('recognizes a parent account', () {
+      final response = LoginResponse.fromJson({
+        'id': 4,
+        'userName': 'parent01',
+        'firstName': 'Phụ huynh',
+        'lastName': 'Một',
+        'roles': ['PARENT'],
+        'permissions': ['CHILD_READ'],
+        'status': 'ACTIVE',
+      });
+
+      expect(response.primaryRole, 'PARENT');
+      expect(response.studentCode, 'parent01');
+      expect(response.fullName, 'Phụ huynh Một');
     });
   });
 }

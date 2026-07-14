@@ -3,9 +3,20 @@ import 'package:flutter/services.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/auth_session.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/schedule_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/profile_screen.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/widgets/main_bottom_navigation.dart';
 
 class WeeklyTimetableScreen extends StatefulWidget {
-  const WeeklyTimetableScreen({super.key});
+  const WeeklyTimetableScreen({
+    super.key,
+    this.scope = ScheduleScope.student,
+    this.studentId,
+    this.studentName,
+  }) : assert(scope != ScheduleScope.parent || studentId != null);
+
+  final ScheduleScope scope;
+  final int? studentId;
+  final String? studentName;
 
   @override
   State<WeeklyTimetableScreen> createState() => _WeeklyTimetableScreenState();
@@ -20,6 +31,7 @@ class _WeeklyTimetableScreenState extends State<WeeklyTimetableScreen> {
   late DateTime _weekStart;
   late DateTime _selectedDate;
   late Future<List<ScheduleItem>> _scheduleFuture;
+  Future<Set<DateTime>>? _scheduledDatesFuture;
   var _isRedirectingToLogin = false;
 
   @override
@@ -27,28 +39,51 @@ class _WeeklyTimetableScreenState extends State<WeeklyTimetableScreen> {
     super.initState();
     _selectedDate = _dateOnly(DateTime.now());
     _weekStart = _mondayOf(_selectedDate);
-    _scheduleFuture = _service.fetchScheduleForDate(_selectedDate);
+    _scheduleFuture = _fetchSchedule();
+    _scheduledDatesFuture = _fetchScheduledDates();
+  }
+
+  Future<List<ScheduleItem>> _fetchSchedule() {
+    return _service.fetchScheduleForDate(
+      _selectedDate,
+      scope: widget.scope,
+      studentId: widget.studentId,
+    );
+  }
+
+  Future<Set<DateTime>> _fetchScheduledDates() async {
+    final items = await _service.fetchWeeklySchedule(
+      _weekStart,
+      scope: widget.scope,
+      studentId: widget.studentId,
+    );
+    return items.map((item) => _dateOnly(item.studyDate)).toSet();
   }
 
   void _changeWeek(int offset) {
     setState(() {
       _weekStart = _weekStart.add(Duration(days: offset * 7));
       _selectedDate = _selectedDate.add(Duration(days: offset * 7));
-      _scheduleFuture = _service.fetchScheduleForDate(_selectedDate);
+      _scheduleFuture = _fetchSchedule();
+      _scheduledDatesFuture = _fetchScheduledDates();
     });
   }
 
   Future<void> _reload() async {
+    final scheduleFuture = _fetchSchedule();
+    final scheduledDatesFuture = _fetchScheduledDates();
     setState(() {
-      _scheduleFuture = _service.fetchScheduleForDate(_selectedDate);
+      _scheduleFuture = scheduleFuture;
+      _scheduledDatesFuture = scheduledDatesFuture;
     });
-    await _scheduleFuture;
+    await scheduleFuture;
+    await scheduledDatesFuture.catchError((_) => <DateTime>{});
   }
 
   void _selectDate(DateTime date) {
     setState(() {
       _selectedDate = _dateOnly(date);
-      _scheduleFuture = _service.fetchScheduleForDate(_selectedDate);
+      _scheduleFuture = _fetchSchedule();
     });
   }
 
@@ -77,7 +112,7 @@ class _WeeklyTimetableScreenState extends State<WeeklyTimetableScreen> {
         body: Column(
           children: [
             _buildHeader(context),
-            _buildSemesterTabs(),
+            _buildScopeBanner(),
             Expanded(
               child: FutureBuilder<List<ScheduleItem>>(
                 future: _scheduleFuture,
@@ -124,11 +159,13 @@ class _WeeklyTimetableScreenState extends State<WeeklyTimetableScreen> {
                 'Home',
                 style: TextStyle(color: Colors.white, fontSize: 16),
               ),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Weekly timetable',
+                  _screenTitle,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -143,25 +180,47 @@ class _WeeklyTimetableScreenState extends State<WeeklyTimetableScreen> {
     );
   }
 
-  Widget _buildSemesterTabs() {
-    final year = _selectedDate.year;
+  String get _screenTitle {
+    return switch (widget.scope) {
+      ScheduleScope.teacher => 'Lịch dạy',
+      ScheduleScope.parent => 'Lịch · ${widget.studentName ?? 'Học sinh'}',
+      ScheduleScope.student => 'Weekly timetable',
+    };
+  }
+
+  Widget _buildScopeBanner() {
+    final message = switch (widget.scope) {
+      ScheduleScope.teacher => 'Lịch giảng dạy theo ngày',
+      ScheduleScope.parent =>
+        'Lịch học của ${widget.studentName ?? 'sinh viên đã chọn'}',
+      ScheduleScope.student => 'Lịch học theo ngày',
+    };
     return Container(
-      height: 58,
+      width: double.infinity,
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+      child: Row(
         children: [
-          _SemesterChip(
-            label: 'SUMMER$year',
-            icon: Icons.wb_sunny_outlined,
-            selected: true,
+          Icon(
+            widget.scope == ScheduleScope.teacher
+                ? Icons.co_present_outlined
+                : Icons.school_outlined,
+            color: _navy,
+            size: 20,
           ),
-          const SizedBox(width: 10),
-          _SemesterChip(label: 'SPRING$year', icon: Icons.spa_outlined),
-          const SizedBox(width: 10),
-          _SemesterChip(label: 'FALL${year - 1}', icon: Icons.park_outlined),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              message,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: _text,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -224,7 +283,7 @@ class _WeeklyTimetableScreenState extends State<WeeklyTimetableScreen> {
         children: [
           IconButton(
             onPressed: () => _changeWeek(-1),
-            icon: const Icon(Icons.play_arrow, size: 19),
+            icon: const Icon(Icons.chevron_left_rounded, size: 24),
             color: _navy,
             tooltip: 'Previous week',
             padding: EdgeInsets.zero,
@@ -241,16 +300,13 @@ class _WeeklyTimetableScreenState extends State<WeeklyTimetableScreen> {
               ),
             ),
           ),
-          Transform.rotate(
-            angle: 3.14159,
-            child: IconButton(
-              onPressed: () => _changeWeek(1),
-              icon: const Icon(Icons.play_arrow, size: 19),
-              color: _navy,
-              tooltip: 'Next week',
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(width: 28, height: 28),
-            ),
+          IconButton(
+            onPressed: () => _changeWeek(1),
+            icon: const Icon(Icons.chevron_right_rounded, size: 24),
+            color: _navy,
+            tooltip: 'Next week',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.tightFor(width: 28, height: 28),
           ),
         ],
       ),
@@ -258,11 +314,23 @@ class _WeeklyTimetableScreenState extends State<WeeklyTimetableScreen> {
   }
 
   Widget _buildDateStrip() {
+    return FutureBuilder<Set<DateTime>>(
+      future: _scheduledDatesFuture ??= _fetchScheduledDates(),
+      builder: (context, snapshot) {
+        return _buildDateStripContent(snapshot.data ?? const <DateTime>{});
+      },
+    );
+  }
+
+  Widget _buildDateStripContent(Set<DateTime> scheduledDates) {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return Row(
       children: List.generate(7, (index) {
         final day = _weekStart.add(Duration(days: index));
         final selected = _sameDate(day, _selectedDate);
+        final hasSchedule = scheduledDates.any(
+          (scheduledDate) => _sameDate(scheduledDate, day),
+        );
         return Expanded(
           child: Material(
             color: Colors.transparent,
@@ -286,15 +354,27 @@ class _WeeklyTimetableScreenState extends State<WeeklyTimetableScreen> {
                       height: 29,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: selected ? _navy : Colors.transparent,
+                        color: selected
+                            ? _navy
+                            : hasSchedule
+                            ? const Color(0xFFFFF1E3)
+                            : Colors.transparent,
                         shape: BoxShape.circle,
+                        border: hasSchedule
+                            ? Border.all(
+                                color: selected
+                                    ? const Color(0xFFFF9800)
+                                    : const Color(0xFFFFB25F),
+                                width: selected ? 2 : 1,
+                              )
+                            : null,
                       ),
                       child: Text(
                         '${day.day}',
                         style: TextStyle(
                           color: selected ? Colors.white : _text,
                           fontSize: 14,
-                          fontWeight: selected
+                          fontWeight: selected || hasSchedule
                               ? FontWeight.w800
                               : FontWeight.w600,
                         ),
@@ -311,34 +391,11 @@ class _WeeklyTimetableScreenState extends State<WeeklyTimetableScreen> {
   }
 
   Widget _buildBottomNavigation() {
-    return Container(
-      height: 66,
-      decoration: const BoxDecoration(
-        color: _navy,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(22),
-          topRight: Radius.circular(22),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Container(
-              width: 50,
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFF3D4654),
-                borderRadius: BorderRadius.circular(13),
-              ),
-              child: const Icon(Icons.home_outlined, color: Color(0xFFFF9800)),
-            ),
-            const Icon(Icons.chat_bubble, color: Color(0xFF91A1B7)),
-            const Icon(Icons.person, color: Color(0xFF91A1B7)),
-          ],
-        ),
-      ),
+    return MainBottomNavigation(
+      onHome: () => Navigator.of(context).popUntil((route) => route.isFirst),
+      onProfile: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const ProfileScreen())),
     );
   }
 
@@ -379,50 +436,6 @@ class _WeeklyTimetableScreenState extends State<WeeklyTimetableScreen> {
   }
 }
 
-class _SemesterChip extends StatelessWidget {
-  const _SemesterChip({
-    required this.label,
-    required this.icon,
-    this.selected = false,
-  });
-
-  final String label;
-  final IconData icon;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 13),
-      decoration: BoxDecoration(
-        color: selected ? const Color(0xFFFF9500) : const Color(0xFFF8F9FC),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: selected ? const Color(0xFFFF9500) : const Color(0xFFE3E7EE),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 15,
-            color: selected ? const Color(0xFFFFC36B) : const Color(0xFFB1BBCB),
-          ),
-          const SizedBox(width: 7),
-          Text(
-            label,
-            style: TextStyle(
-              color: selected ? Colors.white : const Color(0xFF31415B),
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _ScheduleEntry extends StatelessWidget {
   const _ScheduleEntry(this.entry);
 
@@ -436,6 +449,7 @@ class _ScheduleEntry extends StatelessWidget {
     final status = _attendanceStatus(entry.studyDate);
     final note = entry.note;
     final lecturer = entry.lecturerName;
+    final isTeachingSchedule = entry.studentCount != null;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -543,9 +557,19 @@ class _ScheduleEntry extends StatelessWidget {
                       fontSize: 12,
                     ),
                   ),
-                if (lecturer != null)
+                if (!isTeachingSchedule && lecturer != null)
                   Text(
                     'Lecturer: $lecturer',
+                    style: const TextStyle(
+                      color: Color(0xFF6A7484),
+                      fontSize: 12,
+                    ),
+                  ),
+                if (isTeachingSchedule && entry.classNames.isNotEmpty)
+                  Text(
+                    'Lớp: ${entry.classNames.join(', ')}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Color(0xFF6A7484),
                       fontSize: 12,
@@ -557,14 +581,11 @@ class _ScheduleEntry extends StatelessWidget {
                   runSpacing: 5,
                   children: [
                     _StatusBadge(label: status.$1, color: status.$2),
-                    const _StatusBadge(
-                      label: 'Materials',
-                      color: Color(0xFFFF9500),
-                    ),
-                    const _StatusBadge(
-                      label: 'Meet URL',
-                      color: Color(0xFF18B981),
-                    ),
+                    if (entry.studentCount != null)
+                      _StatusBadge(
+                        label: '${entry.studentCount} sinh viên',
+                        color: const Color(0xFFFF9500),
+                      ),
                   ],
                 ),
               ],
@@ -580,12 +601,12 @@ class _ScheduleEntry extends StatelessWidget {
     final current = DateTime(today.year, today.month, today.day);
     final entryDate = DateTime(date.year, date.month, date.day);
     if (entryDate.isBefore(current)) {
-      return ('PRESENT', const Color(0xFF39CD39));
+      return ('ĐÃ QUA', const Color(0xFF39CD39));
     }
     if (entryDate == current) {
-      return ('TODAY', const Color(0xFF377BDF));
+      return ('HÔM NAY', const Color(0xFF377BDF));
     }
-    return ('NOT YET', const Color(0xFF8E9295));
+    return ('SẮP TỚI', const Color(0xFF8E9295));
   }
 
   int _slotNumber(String time) {
@@ -707,7 +728,7 @@ class _LoadError extends StatelessWidget {
     final failure = error;
     final message = failure is SessionExpiredException
         ? failure.message
-        : 'Unable to load your timetable. Please check the backend connection.';
+        : _cleanError(failure);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(30),
@@ -735,5 +756,15 @@ class _LoadError extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _cleanError(Object? error) {
+    final message = error?.toString().trim() ?? '';
+    if (message.isEmpty) {
+      return 'Không thể tải lịch. Vui lòng kiểm tra kết nối máy chủ.';
+    }
+    return message
+        .replaceFirst(RegExp(r'^Exception:\s*', caseSensitive: false), '')
+        .trim();
   }
 }

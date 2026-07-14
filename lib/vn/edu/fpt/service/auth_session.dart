@@ -15,18 +15,32 @@ class AuthSession {
   AuthSession._();
 
   static const _accessTokenKey = 'access_token';
+  static const _refreshTokenKey = 'refresh_token';
   static final FlutterSecureStorage _storage = FlutterSecureStorage();
 
-  static Future<void> saveAccessToken(String token) {
-    return _storage.write(key: _accessTokenKey, value: token);
+  static Future<void> saveTokens({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    await Future.wait(<Future<void>>[
+      _storage.write(key: _accessTokenKey, value: accessToken),
+      _storage.write(key: _refreshTokenKey, value: refreshToken),
+    ]);
   }
 
   static Future<String?> readAccessToken() {
     return _storage.read(key: _accessTokenKey);
   }
 
-  static Future<void> clear() {
-    return _storage.delete(key: _accessTokenKey);
+  static Future<String?> readRefreshToken() {
+    return _storage.read(key: _refreshTokenKey);
+  }
+
+  static Future<void> clear() async {
+    await Future.wait(<Future<void>>[
+      _storage.delete(key: _accessTokenKey),
+      _storage.delete(key: _refreshTokenKey),
+    ]);
   }
 
   static Future<Map<String, String>> authorizedHeaders() async {

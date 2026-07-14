@@ -3,11 +3,18 @@ import 'package:flutter/services.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/auth_session.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/mark_report_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/profile_screen.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/widgets/main_bottom_navigation.dart';
 
 class MarkDetailScreen extends StatefulWidget {
-  const MarkDetailScreen({super.key, required this.gradeId});
+  const MarkDetailScreen({
+    super.key,
+    required this.gradeId,
+    this.studentId,
+  });
 
   final int gradeId;
+  final int? studentId;
 
   @override
   State<MarkDetailScreen> createState() => _MarkDetailScreenState();
@@ -33,6 +40,7 @@ class _MarkDetailScreenState extends State<MarkDetailScreen> {
     super.initState();
     _detailFuture = MarkReportService().fetchMarkDetail(
       gradeId: widget.gradeId,
+      studentId: widget.studentId,
     );
   }
 
@@ -166,38 +174,10 @@ class _MarkDetailScreenState extends State<MarkDetailScreen> {
   }
 
   Widget _buildBottomNavigation() {
-    return Container(
-      height: 66,
-      decoration: const BoxDecoration(
-        color: _bottomColor,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(8),
-          topRight: Radius.circular(8),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            const Icon(
-              Icons.cloud_queue_rounded,
-              color: Color(0xFFD6DEE9),
-              size: 22,
-            ),
-            Container(
-              width: 35,
-              height: 32,
-              decoration: BoxDecoration(
-                color: const Color(0xFF3F4652),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.home_filled, color: _orange, size: 22),
-            ),
-            const Icon(Icons.chat_bubble, color: Color(0xFF9EACBE), size: 20),
-            const Icon(Icons.person, color: Color(0xFF9EACBE), size: 22),
-          ],
-        ),
+    return MainBottomNavigation(
+      onHome: () => Navigator.of(context).popUntil((route) => route.isFirst),
+      onProfile: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
       ),
     );
   }

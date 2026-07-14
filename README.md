@@ -1,25 +1,47 @@
-# myfschoolse1911
+# My FSchool Mobile
 
-A new Flutter project.
+Flutter client cho ba vai trò của backend `prm393-be`:
 
-## Getting Started
+- `STUDENT`: xem điểm, chi tiết điểm và lịch học của chính mình.
+- `PARENT`: xem danh sách sinh viên đã liên kết, điểm và lịch của từng sinh viên.
+- `TEACHER`: xem lịch dạy, chọn học kỳ/môn được phân công và tạo hoặc cập nhật điểm.
 
-The Android app uses the backend URL configured by `API_BASE_URL`.
+Ứng dụng điều hướng bằng mảng `roles` từ response đăng nhập. Điều này hỗ trợ đúng
+tài khoản cũ có đồng thời `LECTURER` và `TEACHER`.
 
-Run on a physical device connected to the same network as the backend:
+## Cấu hình backend
+
+URL API được cấu hình bằng `API_BASE_URL`. Mặc định Android là URL Android
+Emulator `http://10.0.2.2:8080/api`; web mặc định dùng
+`http://localhost:8080/api`.
+
+Chạy trên thiết bị thật cùng mạng LAN với máy backend (thay IP khi mạng đổi):
 
 ```powershell
-flutter run --dart-define=API_BASE_URL=http://10.33.73.234:8080/api
+flutter run --dart-define=API_BASE_URL=http://192.168.1.11:8080/api
 ```
 
-Run on the standard Android Emulator:
+Chạy trên Android Emulator:
 
 ```powershell
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080/api
 ```
 
-The default URL is `http://10.33.73.234:8080/api`. If the computer's LAN IP
-changes, pass the current IP using `--dart-define`.
+Trước khi thử parent/teacher, backend cần chạy Flyway V18–V20 và admin phải:
+
+- tạo/gán role `PARENT`, sau đó liên kết các student;
+- tạo/gán role `TEACHER`, gán các subject và `teacher_id` cho lịch;
+- enroll student vào subject của semester tương ứng.
+
+Các URL HTTP/cleartext ở trên chỉ dành cho phát triển nội bộ. Bản production nên
+dùng HTTPS để bảo vệ mật khẩu và JWT.
+
+## Kiểm tra
+
+```powershell
+flutter analyze
+flutter test
+```
 
 This project is a starting point for a Flutter application.
 
