@@ -9,7 +9,7 @@ The Android app uses the backend URL configured by `API_BASE_URL`.
 Run on a physical device connected to the same network as the backend:
 
 ```powershell
-flutter run --dart-define=API_BASE_URL=http://192.168.1.11:8080/api
+flutter run --dart-define=API_BASE_URL=http://10.33.73.234:8080/api
 ```
 
 Run on the standard Android Emulator:
@@ -18,7 +18,7 @@ Run on the standard Android Emulator:
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080/api
 ```
 
-The default URL is `http://192.168.1.11:8080/api`. If the computer's LAN IP
+The default URL is `http://10.33.73.234:8080/api`. If the computer's LAN IP
 changes, pass the current IP using `--dart-define`.
 
 This project is a starting point for a Flutter application.

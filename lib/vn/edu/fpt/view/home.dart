@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/auth_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/mark_report.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/weekly_timetable.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key, required this.currentUser});
@@ -39,7 +40,7 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 22),
                   _buildSectionTitle('INFORMATION ACCESS'),
                   const SizedBox(height: 12),
-                  _buildInfoAccessSection(),
+                  _buildInfoAccessSection(context),
 
                   const SizedBox(height: 22),
                   _buildSectionTitle('REPORTS'),
@@ -159,17 +160,25 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoAccessSection() {
+  Widget _buildInfoAccessSection(BuildContext context) {
     return Column(
       children: [
         Row(
-          children: const [
+          children: [
             Expanded(
               child: _HomeCard(
                 title: 'Weekly timetable',
                 icon: Icons.calendar_today,
-                iconColor: Color(0xFF18A8E8),
-                backgroundColor: Color(0xFFE5F6FF),
+                iconColor: const Color(0xFF18A8E8),
+                backgroundColor: const Color(0xFFE5F6FF),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const WeeklyTimetableScreen(),
+                    ),
+                  );
+                },
               ),
             ),
             SizedBox(width: 10),
@@ -226,8 +235,7 @@ class HomeScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          const MarkReportScreen(),
+                      builder: (context) => const MarkReportScreen(),
                     ),
                   );
                 },
