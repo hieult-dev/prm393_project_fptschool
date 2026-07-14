@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "45644695582",
+    "project_id": "prm393-fschool",
+    "storage_bucket": "prm393-fschool.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:45644695582:android:35f516ed85f280e5a2060f",
+        "android_client_info": {
+          "package_name": "com.example.myfschoolse1911"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyi6ncpmhbu76xjOVsgLIT5xG5kTJsIBU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
