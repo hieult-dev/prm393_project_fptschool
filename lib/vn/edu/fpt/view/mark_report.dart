@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/auth_session.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/mark_report_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/events_feed_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/mark_detail.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/profile_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/widgets/main_bottom_navigation.dart';
@@ -56,10 +57,7 @@ class _MarkReportScreenState extends State<MarkReportScreen> {
               width: double.infinity,
               child: Container(
                 color: _topColor,
-                child: SafeArea(
-                  bottom: false,
-                  child: _buildHeader(context),
-                ),
+                child: SafeArea(bottom: false, child: _buildHeader(context)),
               ),
             ),
             Expanded(
@@ -68,9 +66,7 @@ class _MarkReportScreenState extends State<MarkReportScreen> {
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
-                      child: CircularProgressIndicator(
-                        color: _orange,
-                      ),
+                      child: CircularProgressIndicator(color: _orange),
                     );
                   }
 
@@ -152,16 +148,10 @@ class _MarkReportScreenState extends State<MarkReportScreen> {
                 minimumSize: const Size(0, 44),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              icon: const Icon(
-                Icons.chevron_left,
-                size: 32,
-              ),
+              icon: const Icon(Icons.chevron_left, size: 32),
               label: const Text(
                 'Home',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
             ),
           ),
@@ -253,11 +243,7 @@ class _MarkReportScreenState extends State<MarkReportScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: const Color(0xFF98A2B3),
-              size: 42,
-            ),
+            Icon(icon, color: const Color(0xFF98A2B3), size: 42),
             const SizedBox(height: 12),
             Text(
               title,
@@ -288,9 +274,12 @@ class _MarkReportScreenState extends State<MarkReportScreen> {
   Widget _buildBottomNavigation() {
     return MainBottomNavigation(
       onHome: () => Navigator.of(context).popUntil((route) => route.isFirst),
-      onProfile: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
-      ),
+      onEvents: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const EventsFeedScreen())),
+      onProfile: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const ProfileScreen())),
     );
   }
 
@@ -355,13 +344,13 @@ class _SemesterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final background = selected ? _MarkReportScreenState._orange : Colors.white;
-    final foreground = selected ? Colors.white : _MarkReportScreenState._titleText;
+    final foreground = selected
+        ? Colors.white
+        : _MarkReportScreenState._titleText;
     final iconBackground = selected
         ? const Color(0x26FFFFFF)
         : const Color(0xFFF1F3F8);
-    final iconColor = selected
-        ? Colors.white
-        : const Color(0xFFB8BEC9);
+    final iconColor = selected ? Colors.white : const Color(0xFFB8BEC9);
 
     return Material(
       color: background,
@@ -385,11 +374,7 @@ class _SemesterChip extends StatelessWidget {
                   color: iconBackground,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  icon,
-                  color: iconColor,
-                  size: 14,
-                ),
+                child: Icon(icon, color: iconColor, size: 14),
               ),
               const SizedBox(width: 8),
               Text(
@@ -412,10 +397,7 @@ class _SemesterChip extends StatelessWidget {
 }
 
 class _GradeCard extends StatelessWidget {
-  const _GradeCard({
-    required this.grade,
-    required this.onTap,
-  });
+  const _GradeCard({required this.grade, required this.onTap});
 
   final MarkReportGrade grade;
   final VoidCallback onTap;
@@ -444,10 +426,7 @@ class _GradeCard extends StatelessWidget {
                 top: 0,
                 bottom: 0,
                 left: 0,
-                child: Container(
-                  width: 4,
-                  color: statusColor,
-                ),
+                child: Container(width: 4, color: statusColor),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(18, 13, 14, 11),
@@ -475,9 +454,7 @@ class _GradeCard extends StatelessWidget {
                                     fontWeight: FontWeight.w900,
                                   ),
                                 ),
-                                TextSpan(
-                                  text: ' - ${grade.subjectName}',
-                                ),
+                                TextSpan(text: ' - ${grade.subjectName}'),
                               ],
                             ),
                           ),

@@ -4,6 +4,7 @@ import 'package:myfschoolse1911/vn/edu/fpt/service/auth_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/auth_session.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/profile_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/events_feed_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/widgets/main_bottom_navigation.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -69,6 +70,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
+  void _openEvents() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const EventsFeedScreen()));
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -103,6 +110,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         bottomNavigationBar: MainBottomNavigation(
           selectedItem: MainNavigationItem.profile,
           onHome: _goHome,
+          onEvents: _openEvents,
         ),
       ),
     );
@@ -334,14 +342,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   String _roleBadge(LoginResponse profile) {
-    if (profile.hasRole('TEACHER')) return 'GV';
+    if (profile.hasRole('HOMEROOM_TEACHER')) return 'GVCN';
+    if (profile.hasRole('SUBJECT_TEACHER') || profile.hasRole('TEACHER')) {
+      return 'GVBM';
+    }
     if (profile.hasRole('PARENT')) return 'PH';
     if (profile.hasRole('STUDENT')) return 'SV';
     return 'TV';
   }
 
   String _roleName(LoginResponse profile) {
-    if (profile.hasRole('TEACHER')) return 'Giáo viên';
+    if (profile.hasRole('HOMEROOM_TEACHER')) return 'Giáo viên chủ nhiệm';
+    if (profile.hasRole('SUBJECT_TEACHER') || profile.hasRole('TEACHER')) {
+      return 'Giáo viên bộ môn';
+    }
     if (profile.hasRole('PARENT')) return 'Phụ huynh';
     if (profile.hasRole('STUDENT')) return 'Sinh viên';
     return profile.primaryRole.isEmpty ? 'Thành viên' : profile.primaryRole;

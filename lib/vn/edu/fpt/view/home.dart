@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/auth_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/events_feed_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/mark_report.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/parent_home.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/profile_screen.dart';
-import 'package:myfschoolse1911/vn/edu/fpt/view/student_applications.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/teacher_home.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/weekly_timetable.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/widgets/main_bottom_navigation.dart';
@@ -17,7 +17,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (currentUser.hasRole('TEACHER')) {
+    if (currentUser.hasRole('SUBJECT_TEACHER') ||
+        currentUser.hasRole('TEACHER')) {
       return TeacherHomeScreen(currentUser: currentUser);
     }
     if (currentUser.hasRole('PARENT')) {
@@ -58,7 +59,7 @@ class _StudentHomeScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(18, 18, 18, 110),
                 children: [
-                  _buildSectionTitle('NOTIFICATION AND APPLICATION STATUS'),
+                  _buildSectionTitle('NOTIFICATION'),
                   const SizedBox(height: 12),
                   _buildStatusSection(context),
 
@@ -179,34 +180,11 @@ class _StudentHomeScreen extends StatelessWidget {
   }
 
   Widget _buildStatusSection(BuildContext context) {
-    return Row(
-      children: [
-        const Expanded(
-          child: _HomeCard(
-            title: 'Notification',
-            icon: Icons.notifications_active,
-            iconColor: Color(0xFFFF9800),
-            backgroundColor: Color(0xFFFFF3E0),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _HomeCard(
-            title: 'Application status',
-            icon: Icons.badge,
-            iconColor: const Color(0xFF1976C9),
-            backgroundColor: const Color(0xFFEAF2FF),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const StudentApplicationsScreen(),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
+    return const _HomeCard(
+      title: 'Notification',
+      icon: Icons.notifications_active,
+      iconColor: Color(0xFFFF9800),
+      backgroundColor: Color(0xFFFFF3E0),
     );
   }
 
@@ -345,6 +323,9 @@ class _StudentHomeScreen extends StatelessWidget {
 
   Widget _buildBottomNavigation(BuildContext context) {
     return MainBottomNavigation(
+      onEvents: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const EventsFeedScreen())),
       onProfile: () => Navigator.of(
         context,
       ).push(MaterialPageRoute<void>(builder: (_) => const ProfileScreen())),

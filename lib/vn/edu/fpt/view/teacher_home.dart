@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/auth_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/schedule_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/events_feed_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/profile_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/teacher_grades.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/weekly_timetable.dart';
@@ -52,6 +53,12 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const TeacherGradesScreen()),
     );
+  }
+
+  void _openEvents() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const EventsFeedScreen()));
   }
 
   void _openProfile() {
@@ -154,7 +161,10 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
             ),
           ],
         ),
-        bottomNavigationBar: MainBottomNavigation(onProfile: _openProfile),
+        bottomNavigationBar: MainBottomNavigation(
+          onEvents: _openEvents,
+          onProfile: _openProfile,
+        ),
       ),
     );
   }

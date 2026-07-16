@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/auth_session.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/schedule_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/events_feed_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/profile_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/widgets/main_bottom_navigation.dart';
 
@@ -393,6 +394,9 @@ class _WeeklyTimetableScreenState extends State<WeeklyTimetableScreen> {
   Widget _buildBottomNavigation() {
     return MainBottomNavigation(
       onHome: () => Navigator.of(context).popUntil((route) => route.isFirst),
+      onEvents: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const EventsFeedScreen())),
       onProfile: () => Navigator.of(
         context,
       ).push(MaterialPageRoute<void>(builder: (_) => const ProfileScreen())),

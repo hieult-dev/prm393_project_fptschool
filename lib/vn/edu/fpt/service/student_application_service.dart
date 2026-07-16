@@ -12,21 +12,25 @@ class StudentApplicationService {
     return _parseList(data, ApplicationType.fromJson, 'application types');
   }
 
-  Future<List<StudentApplication>> fetchApplications({String? status}) async {
+  Future<List<StudentApplication>> fetchApplications({
+    required int studentId,
+    String? status,
+  }) async {
     final data = await _client.get(
-      '/student-applications/search',
+      '/parent/students/$studentId/applications',
       queryParameters: <String, Object?>{'status': status},
     );
     return _parseList(data, StudentApplication.fromJson, 'applications');
   }
 
   Future<StudentApplication> createApplication({
+    required int studentId,
     required int applicationTypeId,
     required String title,
     required String content,
   }) async {
     final data = await _client.post(
-      '/student-applications',
+      '/parent/students/$studentId/applications',
       body: <String, dynamic>{
         'applicationTypeId': applicationTypeId,
         'title': title.trim(),

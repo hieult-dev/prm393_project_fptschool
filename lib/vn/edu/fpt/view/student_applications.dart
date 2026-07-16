@@ -5,7 +5,9 @@ import 'package:myfschoolse1911/vn/edu/fpt/service/api_client.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/student_application_service.dart';
 
 class StudentApplicationsScreen extends StatefulWidget {
-  const StudentApplicationsScreen({super.key});
+  const StudentApplicationsScreen({super.key, required this.student});
+
+  final LinkedStudent student;
 
   @override
   State<StudentApplicationsScreen> createState() =>
@@ -44,6 +46,7 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen> {
       final values = await Future.wait<Object>([
         _service.fetchApplicationTypes(),
         _service.fetchApplications(
+          studentId: widget.student.id,
           status: _statusFilter == 'ALL' ? null : _statusFilter,
         ),
       ]);
@@ -100,6 +103,7 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen> {
 
     try {
       await _service.createApplication(
+        studentId: widget.student.id,
         applicationTypeId: applicationTypeId,
         title: title,
         content: content,
@@ -108,7 +112,9 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen> {
       Navigator.of(context).pop(true);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Đã gửi đơn. Vui lòng chờ admin phản hồi.'),
+          content: Text(
+            'Đã gửi đơn. Vui lòng chờ giáo viên chủ nhiệm phản hồi.',
+          ),
         ),
       );
     } catch (error) {
@@ -128,6 +134,11 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen> {
   String _typeName(int typeId) {
     final matches = _types.where((type) => type.id == typeId);
     return matches.isEmpty ? 'Loại đơn #$typeId' : matches.first.name;
+  }
+
+  String _studentName() {
+    final fullName = widget.student.fullName.trim();
+    return fullName.isEmpty ? widget.student.userName : fullName;
   }
 
   String _message(Object error) {
@@ -151,7 +162,7 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen> {
         appBar: AppBar(
           backgroundColor: _navy,
           foregroundColor: Colors.white,
-          title: const Text('Đơn từ'),
+          title: Text('Đơn từ · ${_studentName()}'),
           actions: [
             IconButton(
               tooltip: 'Làm mới',
@@ -236,8 +247,8 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Gửi đơn cho admin và xem trạng thái phản hồi tại đây.',
+          Text(
+            'Gửi đơn cho giáo viên chủ nhiệm của ${_studentName()} và xem trạng thái phản hồi tại đây.',
             style: TextStyle(color: _muted, fontSize: 13, height: 1.4),
           ),
           const SizedBox(height: 16),
@@ -519,7 +530,7 @@ class _ApplicationCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Phản hồi admin',
+                    'Phản hồi giáo viên chủ nhiệm',
                     style: TextStyle(
                       color: Color(0xFF183A66),
                       fontSize: 12,
@@ -711,7 +722,7 @@ class _EmptyCard extends StatelessWidget {
           ),
           SizedBox(height: 6),
           Text(
-            'Bấm “Viết đơn” để gửi đơn mới cho admin.',
+            'Bấm “Viết đơn” để gửi đơn mới cho giáo viên chủ nhiệm.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Color(0xFF7B8497)),
           ),

@@ -3,15 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/auth_session.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/mark_report_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/events_feed_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/profile_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/widgets/main_bottom_navigation.dart';
 
 class MarkDetailScreen extends StatefulWidget {
-  const MarkDetailScreen({
-    super.key,
-    required this.gradeId,
-    this.studentId,
-  });
+  const MarkDetailScreen({super.key, required this.gradeId, this.studentId});
 
   final int gradeId;
   final int? studentId;
@@ -176,9 +173,12 @@ class _MarkDetailScreenState extends State<MarkDetailScreen> {
   Widget _buildBottomNavigation() {
     return MainBottomNavigation(
       onHome: () => Navigator.of(context).popUntil((route) => route.isFirst),
-      onProfile: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
-      ),
+      onEvents: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const EventsFeedScreen())),
+      onProfile: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const ProfileScreen())),
     );
   }
 

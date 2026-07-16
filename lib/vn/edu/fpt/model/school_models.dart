@@ -78,6 +78,44 @@ class SchoolSubject {
   }
 }
 
+class SchoolEvent {
+  const SchoolEvent({
+    required this.id,
+    required this.title,
+    required this.startTime,
+    required this.status,
+    this.description,
+    this.location,
+    this.endTime,
+    this.imageUrl,
+    this.createdAt,
+  });
+
+  final int id;
+  final String title;
+  final String? description;
+  final String? location;
+  final DateTime startTime;
+  final DateTime? endTime;
+  final String? imageUrl;
+  final String status;
+  final DateTime? createdAt;
+
+  factory SchoolEvent.fromJson(Map<String, dynamic> json) {
+    return SchoolEvent(
+      id: _requiredInt(json['id'], 'id'),
+      title: _text(json['title']),
+      description: _nullableText(json['description']),
+      location: _nullableText(json['location']),
+      startTime: _requiredDate(json['startTime'], 'startTime'),
+      endTime: _nullableDate(json['endTime']),
+      imageUrl: _nullableText(json['imageUrl']),
+      status: _text(json['status']),
+      createdAt: _nullableDate(json['createdAt']),
+    );
+  }
+}
+
 class ApplicationType {
   const ApplicationType({
     required this.id,
@@ -103,11 +141,14 @@ class StudentApplication {
     required this.id,
     required this.userId,
     required this.applicationTypeId,
+    this.parentId,
     required this.title,
     required this.content,
     required this.status,
     this.studentCode,
     this.studentName,
+    this.parentUserName,
+    this.parentName,
     this.className,
     this.applicationTypeName,
     this.responseNote,
@@ -118,11 +159,14 @@ class StudentApplication {
   final int id;
   final int userId;
   final int applicationTypeId;
+  final int? parentId;
   final String title;
   final String content;
   final String status;
   final String? studentCode;
   final String? studentName;
+  final String? parentUserName;
+  final String? parentName;
   final String? className;
   final String? applicationTypeName;
   final String? responseNote;
@@ -137,11 +181,14 @@ class StudentApplication {
         json['applicationTypeId'],
         'applicationTypeId',
       ),
+      parentId: _nullableInt(json['parentId']),
       title: _text(json['title']),
       content: _text(json['content']),
       status: _text(json['status']),
       studentCode: _nullableText(json['studentCode']),
       studentName: _nullableText(json['studentName']),
+      parentUserName: _nullableText(json['parentUserName']),
+      parentName: _nullableText(json['parentName']),
       className: _nullableText(json['className']),
       applicationTypeName: _nullableText(json['applicationTypeName']),
       responseNote: _nullableText(json['responseNote']),
@@ -239,6 +286,11 @@ class TeacherGradeItem {
       'score': score,
     };
   }
+}
+
+int? _nullableInt(dynamic value) {
+  if (value == null || value.toString().trim().isEmpty) return null;
+  return _requiredInt(value, 'nullable int');
 }
 
 int _requiredInt(dynamic value, String fieldName) {

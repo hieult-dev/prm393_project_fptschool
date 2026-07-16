@@ -40,7 +40,13 @@ class LoginResponse {
   bool hasRole(String value) => roles.contains(value.trim().toUpperCase());
 
   String get primaryRole {
-    for (final supportedRole in const ['TEACHER', 'PARENT', 'STUDENT']) {
+    for (final supportedRole in const [
+      'HOMEROOM_TEACHER',
+      'SUBJECT_TEACHER',
+      'TEACHER',
+      'PARENT',
+      'STUDENT',
+    ]) {
       if (hasRole(supportedRole)) return supportedRole;
     }
     return role;

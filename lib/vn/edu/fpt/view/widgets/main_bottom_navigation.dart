@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
-enum MainNavigationItem { home, messages, profile }
+enum MainNavigationItem { home, events, profile }
 
 class MainBottomNavigation extends StatelessWidget {
   const MainBottomNavigation({
     super.key,
     this.selectedItem = MainNavigationItem.home,
     this.onHome,
-    this.onMessages,
+    this.onEvents,
     this.onProfile,
   });
 
   final MainNavigationItem selectedItem;
   final VoidCallback? onHome;
-  final VoidCallback? onMessages;
+  final VoidCallback? onEvents;
   final VoidCallback? onProfile;
 
   static const _navy = Color(0xFF183A66);
@@ -43,10 +43,10 @@ class MainBottomNavigation extends StatelessWidget {
               onTap: onHome,
             ),
             _NavigationButton(
-              tooltip: 'Tin nhắn',
-              icon: Icons.chat_bubble,
-              selected: selectedItem == MainNavigationItem.messages,
-              onTap: onMessages,
+              tooltip: 'Sự kiện',
+              icon: Icons.event_note_rounded,
+              selected: selectedItem == MainNavigationItem.events,
+              onTap: onEvents,
             ),
             _NavigationButton(
               tooltip: 'Cá nhân',
@@ -97,7 +97,7 @@ class _NavigationButton extends StatelessWidget {
               color: selected
                   ? MainBottomNavigation._orange
                   : MainBottomNavigation._inactive,
-              size: icon == Icons.chat_bubble ? 24 : 27,
+              size: icon == Icons.event_note_rounded ? 25 : 27,
             ),
           ),
         ),

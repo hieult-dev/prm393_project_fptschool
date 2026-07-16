@@ -240,7 +240,7 @@ void main() {
         final service = StudentApplicationService(client: client);
 
         await service.fetchApplicationTypes();
-        await service.fetchApplications(status: 'PENDING');
+        await service.fetchApplications(studentId: 12, status: 'PENDING');
 
         client.response = <String, dynamic>{
           'id': 10,
@@ -251,17 +251,18 @@ void main() {
           'status': 'PENDING',
         };
         await service.createApplication(
+          studentId: 12,
           applicationTypeId: 1,
           title: ' Xin nghỉ học ',
           content: ' Em xin nghỉ học buổi PRM393. ',
         );
 
         expect(client.calls[0].path, '/application-types');
-        expect(client.calls[1].path, '/student-applications/search');
+        expect(client.calls[1].path, '/parent/students/12/applications');
         expect(client.calls[1].queryParameters, <String, Object?>{
           'status': 'PENDING',
         });
-        expect(client.calls[2].path, '/student-applications');
+        expect(client.calls[2].path, '/parent/students/12/applications');
         expect(client.calls[2].body, <String, dynamic>{
           'applicationTypeId': 1,
           'title': 'Xin nghỉ học',

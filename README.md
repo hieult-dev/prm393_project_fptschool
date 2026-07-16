@@ -18,7 +18,7 @@ Emulator `http://10.0.2.2:8080/api`; web mặc định dùng
 Chạy trên thiết bị thật cùng mạng LAN với máy backend (thay IP khi mạng đổi):
 
 ```powershell
-flutter run --dart-define=API_BASE_URL=http://192.168.1.11:8080/api
+flutter run --dart-define=API_BASE_URL=http://10.33.73.234:8080/api
 ```
 
 Chạy trên Android Emulator:

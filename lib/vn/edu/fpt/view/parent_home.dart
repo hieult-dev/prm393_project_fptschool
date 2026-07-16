@@ -5,8 +5,10 @@ import 'package:myfschoolse1911/vn/edu/fpt/service/auth_session.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/parent_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/schedule_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/events_feed_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/mark_report.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/profile_screen.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/student_applications.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/weekly_timetable.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/widgets/main_bottom_navigation.dart';
 
@@ -173,8 +175,17 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
           Expanded(child: _buildContent()),
         ],
       ),
-      bottomNavigationBar: MainBottomNavigation(onProfile: _openProfile),
+      bottomNavigationBar: MainBottomNavigation(
+        onEvents: _openEvents,
+        onProfile: _openProfile,
+      ),
     );
+  }
+
+  void _openEvents() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const EventsFeedScreen()));
   }
 
   void _openProfile() {
@@ -320,7 +331,7 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  'Chọn điểm hoặc lịch học để xem thông tin của từng sinh viên.',
+                  'Chọn điểm, lịch học hoặc gửi đơn từ cho giáo viên chủ nhiệm của từng sinh viên.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: const Color(0xFF667085),
                     height: 1.35,
@@ -333,6 +344,7 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
             student: _students[index - 1],
             onOpenGrades: () => _openGrades(_students[index - 1]),
             onOpenSchedule: () => _openSchedule(_students[index - 1]),
+            onOpenApplications: () => _openApplications(_students[index - 1]),
           );
         },
       ),
@@ -422,6 +434,14 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
     );
   }
 
+  void _openApplications(LinkedStudent student) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => StudentApplicationsScreen(student: student),
+      ),
+    );
+  }
+
   void _openSchedule(LinkedStudent student) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -474,11 +494,13 @@ class _StudentCard extends StatelessWidget {
     required this.student,
     required this.onOpenGrades,
     required this.onOpenSchedule,
+    required this.onOpenApplications,
   });
 
   final LinkedStudent student;
   final VoidCallback onOpenGrades;
   final VoidCallback onOpenSchedule;
+  final VoidCallback onOpenApplications;
 
   @override
   Widget build(BuildContext context) {
@@ -597,6 +619,20 @@ class _StudentCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: onOpenApplications,
+                icon: const Icon(Icons.edit_document, size: 20),
+                label: const Text('Gửi đơn'),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(46),
+                  backgroundColor: _ParentHomeScreenState._orange,
+                  foregroundColor: Colors.white,
+                ),
+              ),
             ),
           ],
         ),
