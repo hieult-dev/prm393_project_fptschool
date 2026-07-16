@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/model/school_models.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/api_client.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/service/attendance_report_service.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/service/club_service.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/service/exam_schedule_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/parent_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/profile_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/student_application_service.dart';
@@ -66,6 +69,80 @@ void main() {
       expect(application.studentName, 'Lê Trung Hiếu');
       expect(application.applicationTypeName, 'Leave request');
       expect(application.createdAt, DateTime(2026, 7, 15, 8, 30));
+    });
+
+    test('parses school clubs', () {
+      final club = SchoolClub.fromJson(<String, dynamic>{
+        'id': 4,
+        'name': 'Mobile Dev Club',
+        'description': 'Weekly workshops and coding sessions',
+        'leaderName': 'Nguyen Mentor',
+        'contactEmail': 'mobile.club@fpt.edu.vn',
+        'imageUrl': null,
+        'status': 'ACTIVE',
+        'createdAt': '2026-07-16T08:00:00',
+      });
+
+      expect(club.id, 4);
+      expect(club.name, 'Mobile Dev Club');
+      expect(club.leaderName, 'Nguyen Mentor');
+      expect(club.contactEmail, 'mobile.club@fpt.edu.vn');
+      expect(club.createdAt, DateTime(2026, 7, 16, 8));
+    });
+
+    test('parses exam schedule items', () {
+      final exam = ExamScheduleItem.fromJson(<String, dynamic>{
+        'id': 31,
+        'semesterId': 2,
+        'semesterName': 'Summer 2026',
+        'subjectId': 1,
+        'subjectCode': 'PRM393',
+        'subjectName': 'Mobile Programming',
+        'examType': 'FINAL',
+        'examDate': '2026-08-10',
+        'startTime': '07:30:00',
+        'endTime': '09:00:00',
+        'room': 'BE-301',
+        'seatNumber': 'S01',
+        'proctorName': 'Nguyen Van A',
+        'note': 'Bring student card',
+        'status': 'PUBLISHED',
+      });
+
+      expect(exam.subjectCode, 'PRM393');
+      expect(exam.examDate, DateTime(2026, 8, 10));
+      expect(exam.startTime, '07:30:00');
+      expect(exam.seatNumber, 'S01');
+      expect(exam.status, 'PUBLISHED');
+    });
+
+    test('parses attendance report semesters', () {
+      final semester = AttendanceReportSemester.fromJson(<String, dynamic>{
+        'id': 2,
+        'name': 'Summer 2026',
+        'schoolYear': '2025-2026',
+        'startDate': '2026-05-04',
+        'endDate': '2026-08-22',
+        'reports': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'subjectId': 1,
+            'subjectCode': 'PRM393',
+            'subjectName': 'Mobile Programming',
+            'className': 'SE1911-JV',
+            'startDate': '2026-05-12',
+            'endDate': '2026-08-20',
+            'attendedSessions': 14,
+            'totalSessions': 17,
+            'absentSessions': 3,
+            'attendancePercentage': 82,
+          },
+        ],
+      });
+
+      expect(semester.tabLabel, 'SUMMER2026');
+      expect(semester.reports.single.subjectCode, 'PRM393');
+      expect(semester.reports.single.className, 'SE1911-JV');
+      expect(semester.reports.single.attendancePercentage, 82);
     });
 
     test('parses teacher grade and serializes input items without ids', () {
@@ -241,6 +318,7 @@ void main() {
 
         await service.fetchApplicationTypes();
         await service.fetchApplications(studentId: 12, status: 'PENDING');
+        await service.fetchTeacherApplications(status: 'APPROVED');
 
         client.response = <String, dynamic>{
           'id': 10,
@@ -256,18 +334,114 @@ void main() {
           title: ' Xin nghỉ học ',
           content: ' Em xin nghỉ học buổi PRM393. ',
         );
+        await service.reviewTeacherApplication(
+          applicationId: 10,
+          status: ' approved ',
+          responseNote: ' Đồng ý cho nghỉ. ',
+        );
 
         expect(client.calls[0].path, '/application-types');
         expect(client.calls[1].path, '/parent/students/12/applications');
         expect(client.calls[1].queryParameters, <String, Object?>{
           'status': 'PENDING',
         });
-        expect(client.calls[2].path, '/parent/students/12/applications');
-        expect(client.calls[2].body, <String, dynamic>{
+        expect(client.calls[2].path, '/teacher/applications');
+        expect(client.calls[2].queryParameters, <String, Object?>{
+          'status': 'APPROVED',
+        });
+        expect(client.calls[3].path, '/parent/students/12/applications');
+        expect(client.calls[3].body, <String, dynamic>{
           'applicationTypeId': 1,
           'title': 'Xin nghỉ học',
           'content': 'Em xin nghỉ học buổi PRM393.',
         });
+        expect(client.calls[4].method, 'PATCH');
+        expect(client.calls[4].path, '/teacher/applications/10/review');
+        expect(client.calls[4].body, <String, dynamic>{
+          'status': 'APPROVED',
+          'responseNote': 'Đồng ý cho nghỉ.',
+        });
+      },
+    );
+
+    test('club service requests active clubs', () async {
+      final client = _RecordingApiClient(
+        response: <dynamic>[
+          <String, dynamic>{
+            'id': 4,
+            'name': 'Mobile Dev Club',
+            'status': 'ACTIVE',
+          },
+        ],
+      );
+
+      final clubs = await ClubService(client: client).fetchActiveClubs();
+
+      expect(clubs.single.name, 'Mobile Dev Club');
+      expect(client.calls.single.method, 'GET');
+      expect(client.calls.single.path, '/clubs/search');
+      expect(client.calls.single.queryParameters, <String, Object?>{
+        'status': 'ACTIVE',
+      });
+    });
+
+    test(
+      'exam schedule service requests the current student schedule',
+      () async {
+        final client = _RecordingApiClient(
+          response: <dynamic>[
+            <String, dynamic>{
+              'id': 31,
+              'semesterId': 2,
+              'semesterName': 'Summer 2026',
+              'subjectId': 1,
+              'subjectCode': 'PRM393',
+              'subjectName': 'Mobile Programming',
+              'examType': 'FINAL',
+              'examDate': '2026-08-10',
+              'startTime': '07:30:00',
+              'endTime': '09:00:00',
+              'status': 'PUBLISHED',
+            },
+          ],
+        );
+
+        final exams = await ExamScheduleService(
+          client: client,
+        ).fetchMyExamSchedule(semesterId: 2);
+
+        expect(exams.single.subjectCode, 'PRM393');
+        expect(client.calls.single.method, 'GET');
+        expect(client.calls.single.path, '/exam-schedules/me');
+        expect(client.calls.single.queryParameters, <String, Object?>{
+          'semesterId': 2,
+        });
+      },
+    );
+
+    test(
+      'attendance report service requests the current student report',
+      () async {
+        final client = _RecordingApiClient(
+          response: <dynamic>[
+            <String, dynamic>{
+              'id': 2,
+              'name': 'Summer 2026',
+              'schoolYear': '2025-2026',
+              'startDate': '2026-05-04',
+              'endDate': '2026-08-22',
+              'reports': <Map<String, dynamic>>[],
+            },
+          ],
+        );
+
+        final semesters = await AttendanceReportService(
+          client: client,
+        ).fetchMyAttendanceReport();
+
+        expect(semesters.single.name, 'Summer 2026');
+        expect(client.calls.single.method, 'GET');
+        expect(client.calls.single.path, '/attendance-reports/me');
       },
     );
   });
@@ -328,6 +502,12 @@ class _RecordingApiClient extends ApiClient {
   @override
   Future<dynamic> put(String path, {Object? body}) async {
     calls.add(_ApiCall('PUT', path, body: body));
+    return response;
+  }
+
+  @override
+  Future<dynamic> patch(String path, {Object? body}) async {
+    calls.add(_ApiCall('PATCH', path, body: body));
     return response;
   }
 

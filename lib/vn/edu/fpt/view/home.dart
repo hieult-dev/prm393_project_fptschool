@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/auth_service.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/attendance_report_screen.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/exam_schedule_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/events_feed_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/mark_report.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/parent_home.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/profile_screen.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/student_clubs_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/teacher_home.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/weekly_timetable.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/widgets/main_bottom_navigation.dart';
@@ -17,7 +20,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (currentUser.hasRole('SUBJECT_TEACHER') ||
+    if (currentUser.hasRole('HOMEROOM_TEACHER') ||
+        currentUser.hasRole('SUBJECT_TEACHER') ||
         currentUser.hasRole('TEACHER')) {
       return TeacherHomeScreen(currentUser: currentUser);
     }
@@ -59,11 +63,6 @@ class _StudentHomeScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(18, 18, 18, 110),
                 children: [
-                  _buildSectionTitle('NOTIFICATION'),
-                  const SizedBox(height: 12),
-                  _buildStatusSection(context),
-
-                  const SizedBox(height: 22),
                   _buildSectionTitle('INFORMATION ACCESS'),
                   const SizedBox(height: 12),
                   _buildInfoAccessSection(context),
@@ -72,11 +71,6 @@ class _StudentHomeScreen extends StatelessWidget {
                   _buildSectionTitle('REPORTS'),
                   const SizedBox(height: 12),
                   _buildReportSection(context),
-
-                  const SizedBox(height: 22),
-                  _buildSectionTitle('OTHERS'),
-                  const SizedBox(height: 12),
-                  _buildOtherSection(),
                 ],
               ),
             ),
@@ -179,15 +173,6 @@ class _StudentHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusSection(BuildContext context) {
-    return const _HomeCard(
-      title: 'Notification',
-      icon: Icons.notifications_active,
-      iconColor: Color(0xFFFF9800),
-      backgroundColor: Color(0xFFFFF3E0),
-    );
-  }
-
   Widget _buildInfoAccessSection(BuildContext context) {
     return Column(
       children: [
@@ -216,23 +201,39 @@ class _StudentHomeScreen extends StatelessWidget {
                 icon: Icons.article,
                 iconColor: Color(0xFFFF4D55),
                 backgroundColor: Color(0xFFFFE5EA),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ExamScheduleScreen(),
+                    ),
+                  );
+                },
               ),
             ),
           ],
         ),
         const SizedBox(height: 10),
         Row(
-          children: const [
+          children: [
             Expanded(
               child: _HomeCard(
-                title: 'Semester Schedule',
-                icon: Icons.calendar_month,
-                iconColor: Color(0xFF8D5CFF),
-                backgroundColor: Color(0xFFF0E8FF),
+                title: 'Clubs',
+                icon: Icons.groups_rounded,
+                iconColor: const Color(0xFF20A6C7),
+                backgroundColor: const Color(0xFFE4F8FA),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StudentClubsScreen(),
+                    ),
+                  );
+                },
               ),
             ),
-            SizedBox(width: 10),
-            Expanded(child: SizedBox()),
+            const SizedBox(width: 10),
+            const Spacer(),
           ],
         ),
       ],
@@ -244,12 +245,20 @@ class _StudentHomeScreen extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Expanded(
+            Expanded(
               child: _HomeCard(
                 title: 'Attendance report',
                 icon: Icons.checklist,
-                iconColor: Color(0xFF20C997),
-                backgroundColor: Color(0xFFE1FAF1),
+                iconColor: const Color(0xFF20C997),
+                backgroundColor: const Color(0xFFE1FAF1),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AttendanceReportScreen(),
+                    ),
+                  );
+                },
               ),
             ),
             const SizedBox(width: 10),
@@ -270,52 +279,6 @@ class _StudentHomeScreen extends StatelessWidget {
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: const [
-            Expanded(
-              child: _HomeCard(
-                title: 'Student Fee',
-                icon: Icons.point_of_sale,
-                iconColor: Color(0xFFFF4D55),
-                backgroundColor: Color(0xFFFFE5EA),
-              ),
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child: _HomeCard(
-                title: 'FPT DNG',
-                icon: Icons.payments,
-                iconColor: Color(0xFFFF9800),
-                backgroundColor: Color(0xFFFFF1DC),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOtherSection() {
-    return Row(
-      children: const [
-        Expanded(
-          child: _HomeCard(
-            title: 'Contact',
-            icon: Icons.contacts,
-            iconColor: Color(0xFF5C6CFF),
-            backgroundColor: Color(0xFFEFF2FF),
-          ),
-        ),
-        SizedBox(width: 10),
-        Expanded(
-          child: _HomeCard(
-            title: 'Service review',
-            icon: Icons.star_border,
-            iconColor: Color(0xFFFFB000),
-            backgroundColor: Color(0xFFFFF4D8),
-          ),
         ),
       ],
     );

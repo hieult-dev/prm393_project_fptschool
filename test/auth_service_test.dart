@@ -64,12 +64,14 @@ void main() {
         'role': 'LECTURER',
         'roles': ['LECTURER', 'TEACHER'],
         'permissions': ['GRADE_READ', 'GRADE_WRITE'],
+        'teacherTitle': 'Giáo viên bộ môn',
         'status': 'ACTIVE',
       });
 
       expect(response.role, 'LECTURER');
       expect(response.hasRole('teacher'), isTrue);
       expect(response.primaryRole, 'TEACHER');
+      expect(response.teacherTitle, 'Giáo viên bộ môn');
       expect(response.permissions, ['GRADE_READ', 'GRADE_WRITE']);
     });
 

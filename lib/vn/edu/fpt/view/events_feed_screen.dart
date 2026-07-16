@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/model/school_models.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/event_service.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/event_detail_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/profile_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/widgets/main_bottom_navigation.dart';
 
@@ -43,6 +44,12 @@ class _EventsFeedScreenState extends State<EventsFeedScreen> {
     Navigator.of(
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => const ProfileScreen()));
+  }
+
+  void _openEvent(SchoolEvent event) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => EventDetailScreen(event: event)),
+    );
   }
 
   @override
@@ -146,7 +153,11 @@ class _EventsFeedScreenState extends State<EventsFeedScreen> {
                       itemCount: events.length,
                       separatorBuilder: (_, _) => const SizedBox(height: 14),
                       itemBuilder: (context, index) {
-                        return _EventCard(event: events[index]);
+                        final event = events[index];
+                        return _EventCard(
+                          event: event,
+                          onTap: () => _openEvent(event),
+                        );
                       },
                     ),
                   );
@@ -171,9 +182,10 @@ class _EventsFeedScreenState extends State<EventsFeedScreen> {
 }
 
 class _EventCard extends StatelessWidget {
-  const _EventCard({required this.event});
+  const _EventCard({required this.event, required this.onTap});
 
   final SchoolEvent event;
+  final VoidCallback onTap;
 
   static const _orange = Color(0xFFFF8A3D);
   static const _text = Color(0xFF233752);
@@ -183,9 +195,7 @@ class _EventCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE6ECF5)),
         boxShadow: const [
           BoxShadow(
             color: Color(0x12000000),
@@ -195,81 +205,102 @@ class _EventCard extends StatelessWidget {
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _EventVisual(event: event),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      child: Material(
+        color: Colors.white,
+        child: InkWell(
+          onTap: onTap,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border.all(color: const Color(0xFFE6ECF5)),
+              borderRadius: BorderRadius.circular(18),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        event.title,
-                        style: const TextStyle(
-                          color: _text,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          height: 1.2,
+                _EventVisual(event: event),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              event.title,
+                              style: const TextStyle(
+                                color: _text,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w900,
+                                height: 1.2,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 9,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _orange.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: const Text(
+                              'ACTIVE',
+                              style: TextStyle(
+                                color: _orange,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            color: _muted,
+                            size: 22,
+                          ),
+                        ],
+                      ),
+                      if (event.description != null) ...[
+                        const SizedBox(height: 9),
+                        Text(
+                          event.description!,
+                          style: const TextStyle(
+                            color: _muted,
+                            fontSize: 13,
+                            height: 1.45,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
+                      ],
+                      const SizedBox(height: 13),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _InfoChip(
+                            icon: Icons.schedule_rounded,
+                            label: _formatTimeRange(
+                              event.startTime,
+                              event.endTime,
+                            ),
+                          ),
+                          if (event.location != null)
+                            _InfoChip(
+                              icon: Icons.place_outlined,
+                              label: event.location!,
+                            ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _orange.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: const Text(
-                        'ACTIVE',
-                        style: TextStyle(
-                          color: _orange,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (event.description != null) ...[
-                  const SizedBox(height: 9),
-                  Text(
-                    event.description!,
-                    style: const TextStyle(
-                      color: _muted,
-                      fontSize: 13,
-                      height: 1.45,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    ],
                   ),
-                ],
-                const SizedBox(height: 13),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _InfoChip(
-                      icon: Icons.schedule_rounded,
-                      label: _formatTimeRange(event.startTime, event.endTime),
-                    ),
-                    if (event.location != null)
-                      _InfoChip(
-                        icon: Icons.place_outlined,
-                        label: event.location!,
-                      ),
-                  ],
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

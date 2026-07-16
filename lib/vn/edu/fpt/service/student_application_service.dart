@@ -40,6 +40,31 @@ class StudentApplicationService {
     return StudentApplication.fromJson(_jsonMap(data, 'created application'));
   }
 
+  Future<List<StudentApplication>> fetchTeacherApplications({
+    String? status,
+  }) async {
+    final data = await _client.get(
+      '/teacher/applications',
+      queryParameters: <String, Object?>{'status': status},
+    );
+    return _parseList(data, StudentApplication.fromJson, 'applications');
+  }
+
+  Future<StudentApplication> reviewTeacherApplication({
+    required int applicationId,
+    required String status,
+    String? responseNote,
+  }) async {
+    final data = await _client.patch(
+      '/teacher/applications/$applicationId/review',
+      body: <String, dynamic>{
+        'status': status.trim().toUpperCase(),
+        'responseNote': responseNote?.trim(),
+      },
+    );
+    return StudentApplication.fromJson(_jsonMap(data, 'reviewed application'));
+  }
+
   List<T> _parseList<T>(
     dynamic data,
     T Function(Map<String, dynamic>) fromJson,

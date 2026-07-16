@@ -5,9 +5,16 @@ import 'package:myfschoolse1911/vn/edu/fpt/service/api_client.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/service/student_application_service.dart';
 
 class StudentApplicationsScreen extends StatefulWidget {
-  const StudentApplicationsScreen({super.key, required this.student});
+  const StudentApplicationsScreen({
+    super.key,
+    required this.student,
+    this.showCreateAction = true,
+    this.openCreateOnStart = false,
+  });
 
   final LinkedStudent student;
+  final bool showCreateAction;
+  final bool openCreateOnStart;
 
   @override
   State<StudentApplicationsScreen> createState() =>
@@ -23,6 +30,7 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen> {
   String? _error;
   List<ApplicationType> _types = const [];
   List<StudentApplication> _applications = const [];
+  bool _openedInitialCreate = false;
 
   static const _navy = Color(0xFF183A66);
   static const _orange = Color(0xFFFF7628);
@@ -55,6 +63,16 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen> {
         _types = values[0] as List<ApplicationType>;
         _applications = values[1] as List<StudentApplication>;
       });
+      if (widget.showCreateAction &&
+          widget.openCreateOnStart &&
+          !_openedInitialCreate) {
+        _openedInitialCreate = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _openCreateSheet();
+          }
+        });
+      }
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -162,7 +180,9 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen> {
         appBar: AppBar(
           backgroundColor: _navy,
           foregroundColor: Colors.white,
-          title: Text('Đơn từ · ${_studentName()}'),
+          title: Text(
+            '${widget.showCreateAction ? 'Gửi đơn' : 'Đơn từ'} · ${_studentName()}',
+          ),
           actions: [
             IconButton(
               tooltip: 'Làm mới',
@@ -171,13 +191,15 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen> {
             ),
           ],
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          backgroundColor: _orange,
-          foregroundColor: Colors.white,
-          onPressed: _loading ? null : _openCreateSheet,
-          icon: const Icon(Icons.edit_document),
-          label: const Text('Viết đơn'),
-        ),
+        floatingActionButton: widget.showCreateAction
+            ? FloatingActionButton.extended(
+                backgroundColor: _orange,
+                foregroundColor: Colors.white,
+                onPressed: _loading ? null : _openCreateSheet,
+                icon: const Icon(Icons.edit_document),
+                label: const Text('Viết đơn'),
+              )
+            : null,
         body: SafeArea(
           child: RefreshIndicator(
             onRefresh: _load,
@@ -193,7 +215,7 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen> {
                 else if (_error != null)
                   _ErrorCard(message: _error!, onRetry: _load)
                 else if (_applications.isEmpty)
-                  const _EmptyCard()
+                  _EmptyCard(showCreateAction: widget.showCreateAction)
                 else
                   ..._applications.map(
                     (application) => _ApplicationCard(
@@ -248,7 +270,9 @@ class _StudentApplicationsScreenState extends State<StudentApplicationsScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Gửi đơn cho giáo viên chủ nhiệm của ${_studentName()} và xem trạng thái phản hồi tại đây.',
+            widget.showCreateAction
+                ? 'Gửi đơn cho giáo viên chủ nhiệm của ${_studentName()} và xem trạng thái phản hồi tại đây.'
+                : 'Xem danh sách đơn từ và trạng thái phản hồi của ${_studentName()}.',
             style: TextStyle(color: _muted, fontSize: 13, height: 1.4),
           ),
           const SizedBox(height: 16),
@@ -702,7 +726,9 @@ class _ErrorCard extends StatelessWidget {
 }
 
 class _EmptyCard extends StatelessWidget {
-  const _EmptyCard();
+  const _EmptyCard({required this.showCreateAction});
+
+  final bool showCreateAction;
 
   @override
   Widget build(BuildContext context) {
@@ -712,19 +738,25 @@ class _EmptyCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(Icons.article_outlined, color: Color(0xFF9AA8BD), size: 48),
-          SizedBox(height: 12),
-          Text(
+          const Icon(
+            Icons.article_outlined,
+            color: Color(0xFF9AA8BD),
+            size: 48,
+          ),
+          const SizedBox(height: 12),
+          const Text(
             'Chưa có đơn nào',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
           ),
-          SizedBox(height: 6),
+          const SizedBox(height: 6),
           Text(
-            'Bấm “Viết đơn” để gửi đơn mới cho giáo viên chủ nhiệm.',
+            showCreateAction
+                ? 'Bấm “Viết đơn” để gửi đơn mới cho giáo viên chủ nhiệm.'
+                : 'Các đơn đã gửi cho sinh viên này sẽ hiển thị tại đây.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Color(0xFF7B8497)),
+            style: const TextStyle(color: Color(0xFF7B8497)),
           ),
         ],
       ),

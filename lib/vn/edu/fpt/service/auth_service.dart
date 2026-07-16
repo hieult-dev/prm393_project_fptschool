@@ -13,6 +13,7 @@ class LoginResponse {
   final String email;
   final String? phone;
   final String? className;
+  final String? teacherTitle;
   final String role;
   final List<String> roles;
   final List<String> permissions;
@@ -26,6 +27,7 @@ class LoginResponse {
     required this.email,
     this.phone,
     this.className,
+    this.teacherTitle,
     required this.role,
     required this.roles,
     required this.permissions,
@@ -82,6 +84,7 @@ class LoginResponse {
       email: _stringValue(json['email']),
       phone: _nullableString(json['phone']),
       className: _nullableString(json['className']),
+      teacherTitle: _nullableString(json['teacherTitle']),
       role: declaredRole.isNotEmpty
           ? declaredRole
           : (roles.isEmpty ? '' : roles.first),
@@ -142,7 +145,9 @@ class AuthService {
       return _configuredBaseUrl;
     }
 
-    return kIsWeb ? 'http://localhost:8080/api' : 'http://10.0.2.2:8080/api';
+    return kIsWeb
+        ? 'http://localhost:8080/api'
+        : 'http://192.168.1.11:8080/api';
   }
 
   Future<LoginResponse> login({

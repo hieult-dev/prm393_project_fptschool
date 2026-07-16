@@ -35,6 +35,10 @@ class ApiClient {
     return _send('PUT', path, body: body);
   }
 
+  Future<dynamic> patch(String path, {Object? body}) {
+    return _send('PATCH', path, body: body);
+  }
+
   Future<void> delete(String path) async {
     await _send('DELETE', path);
   }
@@ -134,6 +138,10 @@ class ApiClient {
       'PUT' =>
         http
             .put(uri, headers: headers, body: encodedBody)
+            .timeout(_requestTimeout),
+      'PATCH' =>
+        http
+            .patch(uri, headers: headers, body: encodedBody)
             .timeout(_requestTimeout),
       'DELETE' => http.delete(uri, headers: headers).timeout(_requestTimeout),
       _ => http.get(uri, headers: headers).timeout(_requestTimeout),

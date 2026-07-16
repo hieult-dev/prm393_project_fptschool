@@ -116,6 +116,183 @@ class SchoolEvent {
   }
 }
 
+class SchoolClub {
+  const SchoolClub({
+    required this.id,
+    required this.name,
+    required this.status,
+    this.description,
+    this.leaderName,
+    this.contactEmail,
+    this.imageUrl,
+    this.createdAt,
+  });
+
+  final int id;
+  final String name;
+  final String? description;
+  final String? leaderName;
+  final String? contactEmail;
+  final String? imageUrl;
+  final String status;
+  final DateTime? createdAt;
+
+  factory SchoolClub.fromJson(Map<String, dynamic> json) {
+    return SchoolClub(
+      id: _requiredInt(json['id'], 'id'),
+      name: _text(json['name']),
+      description: _nullableText(json['description']),
+      leaderName: _nullableText(json['leaderName']),
+      contactEmail: _nullableText(json['contactEmail']),
+      imageUrl: _nullableText(json['imageUrl']),
+      status: _text(json['status']),
+      createdAt: _nullableDate(json['createdAt']),
+    );
+  }
+}
+
+class ExamScheduleItem {
+  const ExamScheduleItem({
+    required this.id,
+    required this.semesterId,
+    required this.semesterName,
+    required this.subjectId,
+    required this.subjectCode,
+    required this.subjectName,
+    required this.examType,
+    required this.examDate,
+    required this.startTime,
+    required this.endTime,
+    required this.status,
+    this.room,
+    this.seatNumber,
+    this.proctorName,
+    this.note,
+  });
+
+  final int id;
+  final int semesterId;
+  final String semesterName;
+  final int subjectId;
+  final String subjectCode;
+  final String subjectName;
+  final String examType;
+  final DateTime examDate;
+  final String startTime;
+  final String endTime;
+  final String? room;
+  final String? seatNumber;
+  final String? proctorName;
+  final String? note;
+  final String status;
+
+  factory ExamScheduleItem.fromJson(Map<String, dynamic> json) {
+    return ExamScheduleItem(
+      id: _requiredInt(json['id'], 'id'),
+      semesterId: _requiredInt(json['semesterId'], 'semesterId'),
+      semesterName: _text(json['semesterName']),
+      subjectId: _requiredInt(json['subjectId'], 'subjectId'),
+      subjectCode: _text(json['subjectCode']),
+      subjectName: _text(json['subjectName']),
+      examType: _text(json['examType']),
+      examDate: _requiredDate(json['examDate'], 'examDate'),
+      startTime: _text(json['startTime']),
+      endTime: _text(json['endTime']),
+      room: _nullableText(json['room']),
+      seatNumber: _nullableText(json['seatNumber']),
+      proctorName: _nullableText(json['proctorName']),
+      note: _nullableText(json['note']),
+      status: _text(json['status']),
+    );
+  }
+}
+
+class AttendanceReportSemester {
+  const AttendanceReportSemester({
+    required this.id,
+    required this.name,
+    required this.schoolYear,
+    required this.startDate,
+    required this.endDate,
+    required this.reports,
+  });
+
+  final int id;
+  final String name;
+  final String schoolYear;
+  final DateTime startDate;
+  final DateTime endDate;
+  final List<AttendanceReportItem> reports;
+
+  factory AttendanceReportSemester.fromJson(Map<String, dynamic> json) {
+    final rawReports = json['reports'];
+    if (rawReports is! List) {
+      throw const FormatException('Invalid attendance report field: reports');
+    }
+    return AttendanceReportSemester(
+      id: _requiredInt(json['id'], 'id'),
+      name: _text(json['name']),
+      schoolYear: _text(json['schoolYear']),
+      startDate: _requiredDate(json['startDate'], 'startDate'),
+      endDate: _requiredDate(json['endDate'], 'endDate'),
+      reports: rawReports
+          .map(
+            (item) => AttendanceReportItem.fromJson(_jsonMap(item, 'reports')),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  String get tabLabel => name.replaceAll(' ', '').toUpperCase();
+}
+
+class AttendanceReportItem {
+  const AttendanceReportItem({
+    required this.subjectId,
+    required this.subjectCode,
+    required this.subjectName,
+    required this.className,
+    required this.startDate,
+    required this.endDate,
+    required this.attendedSessions,
+    required this.totalSessions,
+    required this.absentSessions,
+    required this.attendancePercentage,
+  });
+
+  final int subjectId;
+  final String subjectCode;
+  final String subjectName;
+  final String? className;
+  final DateTime startDate;
+  final DateTime endDate;
+  final int attendedSessions;
+  final int totalSessions;
+  final int absentSessions;
+  final int attendancePercentage;
+
+  factory AttendanceReportItem.fromJson(Map<String, dynamic> json) {
+    return AttendanceReportItem(
+      subjectId: _requiredInt(json['subjectId'], 'subjectId'),
+      subjectCode: _text(json['subjectCode']),
+      subjectName: _text(json['subjectName']),
+      className: _nullableText(json['className']),
+      startDate: _requiredDate(json['startDate'], 'startDate'),
+      endDate: _requiredDate(json['endDate'], 'endDate'),
+      attendedSessions: _requiredInt(
+        json['attendedSessions'],
+        'attendedSessions',
+      ),
+      totalSessions: _requiredInt(json['totalSessions'], 'totalSessions'),
+      absentSessions: _requiredInt(json['absentSessions'], 'absentSessions'),
+      attendancePercentage: _requiredInt(
+        json['attendancePercentage'],
+        'attendancePercentage',
+      ),
+    );
+  }
+}
+
 class ApplicationType {
   const ApplicationType({
     required this.id,

@@ -5,7 +5,7 @@ import 'package:myfschoolse1911/vn/edu/fpt/service/schedule_service.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/login.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/events_feed_screen.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/profile_screen.dart';
-import 'package:myfschoolse1911/vn/edu/fpt/view/teacher_grades.dart';
+import 'package:myfschoolse1911/vn/edu/fpt/view/teacher_applications.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/weekly_timetable.dart';
 import 'package:myfschoolse1911/vn/edu/fpt/view/widgets/main_bottom_navigation.dart';
 
@@ -21,7 +21,6 @@ class TeacherHomeScreen extends StatefulWidget {
 class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
   static const _navy = Color(0xFF183A66);
   static const _canvas = Color(0xFFF4F6FA);
-  static const _orange = Color(0xFFFF8A3D);
 
   var _loggingOut = false;
 
@@ -49,9 +48,11 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     );
   }
 
-  void _openGrades() {
+  void _openApplications() {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const TeacherGradesScreen()),
+      MaterialPageRoute<void>(
+        builder: (_) => const TeacherApplicationsScreen(),
+      ),
     );
   }
 
@@ -73,6 +74,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     final displayName = fullName.isEmpty
         ? widget.currentUser.userName
         : fullName;
+    final teacherTitle = _teacherTitle(widget.currentUser);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -87,27 +89,14 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
             _TeacherHeader(
               displayName: displayName,
               userName: widget.currentUser.userName,
+              teacherTitle: teacherTitle,
               loggingOut: _loggingOut,
               onLogout: _logout,
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(18, 24, 18, 30),
+                padding: const EdgeInsets.fromLTRB(18, 20, 18, 30),
                 children: [
-                  const Text(
-                    'Không gian giáo viên',
-                    style: TextStyle(
-                      color: Color(0xFF20334E),
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 7),
-                  const Text(
-                    'Theo dõi lịch giảng dạy và cập nhật kết quả học tập của sinh viên.',
-                    style: TextStyle(color: Color(0xFF68758A), height: 1.45),
-                  ),
-                  const SizedBox(height: 22),
                   _TeacherFeatureCard(
                     title: 'Lịch dạy',
                     description:
@@ -117,45 +106,18 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                     iconBackground: const Color(0xFFE6F2FF),
                     onTap: _openSchedule,
                   ),
-                  const SizedBox(height: 14),
-                  _TeacherFeatureCard(
-                    title: 'Quản lý điểm',
-                    description:
-                        'Chọn học kỳ, môn được phân công và nhập điểm sinh viên.',
-                    icon: Icons.fact_check_outlined,
-                    iconColor: _orange,
-                    iconBackground: const Color(0xFFFFEFE4),
-                    onTap: _openGrades,
-                  ),
-                  const SizedBox(height: 22),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: const Color(0xFFE4E8EF)),
+                  if (widget.currentUser.hasRole('HOMEROOM_TEACHER')) ...[
+                    const SizedBox(height: 14),
+                    _TeacherFeatureCard(
+                      title: 'Đơn phụ huynh',
+                      description:
+                          'Nhận đơn của lớp chủ nhiệm, duyệt hoặc từ chối kèm phản hồi.',
+                      icon: Icons.mark_email_unread_outlined,
+                      iconColor: const Color(0xFF21A179),
+                      iconBackground: const Color(0xFFE4F8EF),
+                      onTap: _openApplications,
                     ),
-                    child: const Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.verified_user_outlined,
-                          color: Color(0xFF21A179),
-                        ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Bạn chỉ có thể xem sinh viên và nhập điểm cho các môn học được nhà trường phân công.',
-                            style: TextStyle(
-                              color: Color(0xFF56647A),
-                              height: 1.45,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -168,18 +130,37 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
       ),
     );
   }
+
+  String _teacherTitle(LoginResponse user) {
+    final backendTitle = user.teacherTitle?.trim();
+    if (backendTitle != null && backendTitle.isNotEmpty) {
+      return backendTitle;
+    }
+    if (user.hasRole('HOMEROOM_TEACHER')) {
+      final className = user.className?.trim();
+      return className == null || className.isEmpty
+          ? 'Giáo viên chủ nhiệm'
+          : 'Giáo viên chủ nhiệm · $className';
+    }
+    if (user.hasRole('SUBJECT_TEACHER') || user.hasRole('TEACHER')) {
+      return 'Giáo viên bộ môn';
+    }
+    return 'Giáo viên';
+  }
 }
 
 class _TeacherHeader extends StatelessWidget {
   const _TeacherHeader({
     required this.displayName,
     required this.userName,
+    required this.teacherTitle,
     required this.loggingOut,
     required this.onLogout,
   });
 
   final String displayName;
   final String userName;
+  final String teacherTitle;
   final bool loggingOut;
   final VoidCallback onLogout;
 
@@ -223,7 +204,7 @@ class _TeacherHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$userName · Giáo viên',
+                      '$userName · $teacherTitle',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(

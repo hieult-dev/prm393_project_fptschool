@@ -344,7 +344,10 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
             student: _students[index - 1],
             onOpenGrades: () => _openGrades(_students[index - 1]),
             onOpenSchedule: () => _openSchedule(_students[index - 1]),
-            onOpenApplications: () => _openApplications(_students[index - 1]),
+            onViewApplications: () =>
+                _openApplications(_students[index - 1], create: false),
+            onOpenApplications: () =>
+                _openApplications(_students[index - 1], create: true),
           );
         },
       ),
@@ -434,10 +437,14 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
     );
   }
 
-  void _openApplications(LinkedStudent student) {
+  void _openApplications(LinkedStudent student, {required bool create}) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => StudentApplicationsScreen(student: student),
+        builder: (_) => StudentApplicationsScreen(
+          student: student,
+          showCreateAction: create,
+          openCreateOnStart: create,
+        ),
       ),
     );
   }
@@ -494,12 +501,14 @@ class _StudentCard extends StatelessWidget {
     required this.student,
     required this.onOpenGrades,
     required this.onOpenSchedule,
+    required this.onViewApplications,
     required this.onOpenApplications,
   });
 
   final LinkedStudent student;
   final VoidCallback onOpenGrades;
   final VoidCallback onOpenSchedule;
+  final VoidCallback onViewApplications;
   final VoidCallback onOpenApplications;
 
   @override
@@ -621,18 +630,34 @@ class _StudentCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: onOpenApplications,
-                icon: const Icon(Icons.edit_document, size: 20),
-                label: const Text('Gửi đơn'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(46),
-                  backgroundColor: _ParentHomeScreenState._orange,
-                  foregroundColor: Colors.white,
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onViewApplications,
+                    icon: const Icon(Icons.article_outlined, size: 20),
+                    label: const Text('Xem đơn'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(46),
+                      foregroundColor: _ParentHomeScreenState._navy,
+                      side: const BorderSide(color: Color(0xFFB8C5D8)),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: onOpenApplications,
+                    icon: const Icon(Icons.edit_document, size: 20),
+                    label: const Text('Gửi đơn'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(46),
+                      backgroundColor: _ParentHomeScreenState._orange,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
