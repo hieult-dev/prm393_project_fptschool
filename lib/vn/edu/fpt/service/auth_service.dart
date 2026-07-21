@@ -146,8 +146,8 @@ class AuthService {
     }
 
     return kIsWeb
-        ? 'http://localhost:8080/api'
-        : 'http://192.168.1.11:8080/api';
+      ? 'http://localhost:8080/api'
+      : 'http://10.33.73.234:8080/api';
   }
 
   Future<LoginResponse> login({
